@@ -476,7 +476,8 @@ function home(){
       <button class="btn small" onclick="openDeck(${i})">Open</button>
     </div>`}).join("")||'<p class="muted">No decks yet. Make one for your last trip.</p>'}
   </div>
-  <button class="btn coral block" onclick="newDeck()">New deck</button>`;
+  <button class="btn coral block" onclick="newDeck()">New deck</button>
+  <a class="link" style="align-self:center" href="privacy.html" target="_blank" rel="noopener">Privacy policy</a>`;
 }
 function newDeck(){decks.push({id:"d"+Date.now(),name:"New trip",color:decks.length,album:[],event:null,place:null,questions:[]});save();S.di=decks.length-1;
   go("deck",{renaming:true,pd:null,sugList:[]});setTimeout(()=>$("dplace")&&$("dplace").focus(),0)}
