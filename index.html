@@ -431,6 +431,9 @@ const crewList=(d,id)=>`<datalist id="${id}">${crewNames(d).map(n=>`<option valu
 let players=(store.get("ij_players",[])).map(p=>typeof p==="string"?{name:p,nick:""}:p);
 let S={screen:"home",k:{cash:false,amount:5,photo:false,photoSrc:null,dare:"",secret:false,...store.get("ij_stakes",{}),photoSrc:null}};
 S.mature=store.get("ij_mature",false);
+/* Google Play build: no real-money pot */
+const STORE_BUILD=/InsideJokesAndroid/.test(navigator.userAgent);
+if(STORE_BUILD)S.k.cash=false;
 const saveK=()=>{const {photoSrc,...rest}=S.k;store.set("ij_stakes",rest)};
 const P=n=>players.find(p=>p.name===n);
 function tierOf(w){return w>=10?"Legend":w>=6?"Gold":w>=3?"Silver":w>=1?"Bronze":""}
@@ -735,9 +738,9 @@ function setup(){
 }
 function stakesUI(){const k=S.k;
   return `<span class="eyebrow">Play for</span><div class="stakes">
-  <div class="stake ${k.cash?"on":""}"><label class="toggle"><input type="checkbox" ${k.cash?"checked":""} onchange="setStake('cash',this.checked)">
+  ${STORE_BUILD?"":`<div class="stake ${k.cash?"on":""}"><label class="toggle"><input type="checkbox" ${k.cash?"checked":""} onchange="setStake('cash',this.checked)">
     <span class="title">Cash pot<br><span class="hint">Everyone else pays the winner on Venmo. The game shows who owes what; you send it yourselves.</span></span></label>
-    ${k.cash?`<label>Each player pays ($)<input id="k_amt" type="number" min="1" step="1" inputmode="decimal" value="${k.amount}" onchange="S.k.amount=Math.max(1,+this.value||1);saveK()"></label>`:""}</div>
+    ${k.cash?`<label>Each player pays ($)<input id="k_amt" type="number" min="1" step="1" inputmode="decimal" value="${k.amount}" onchange="S.k.amount=Math.max(1,+this.value||1);saveK()"></label>`:""}</div>`}
   <div class="stake ${k.photo?"on":""}"><label class="toggle"><input type="checkbox" ${k.photo?"checked":""} onchange="setStake('photo',this.checked)">
     <span class="title">Loser's mystery photo<br><span class="hint">Someone secretly picks a photo. At the end it's revealed with the loser's name on it, plus a dare.</span></span></label>
     ${k.photo?`${k.photoSrc?`<div class="hidden-photo"><div class="lock"><span>?</span></div><p style="flex:1">Locked in. Nobody sees it until the end.</p><button class="link" onclick="S.k.photoSrc=null;render()">Change</button></div>`
@@ -903,7 +906,7 @@ function doImport(){const t=$("imp").value.trim(),m=t.match(/IJ1:[A-Za-z0-9+/=]+
   }catch(e){go("share",{importing:true,shareText:t,err:"That code didn't work. Make sure you pasted the whole thing, including the part starting with IJ1:"})}}
 
 render();
-if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+if("serviceWorker" in navigator&&location.protocol==="https:"&&!/InsideJokesAndroid/.test(navigator.userAgent)){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
 </script>
 </body>
 </html>

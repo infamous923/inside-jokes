@@ -1,0 +1,6 @@
+android/app/src/main/assets/
+android/app/build/
+android/build/
+android/.gradle/
+*.jks
+*.keystore

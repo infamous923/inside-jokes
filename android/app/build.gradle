@@ -1,0 +1,49 @@
+plugins {
+    id 'com.android.application'
+}
+
+def keystoreFile = System.getenv('KEYSTORE_FILE')
+
+android {
+    namespace 'io.github.infamous923.insidejokes'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'io.github.infamous923.insidejokes'
+        minSdk 24
+        targetSdk 36
+        versionCode((System.getenv('VERSION_CODE') ?: '1').toInteger())
+        versionName '1.0.' + (System.getenv('VERSION_CODE') ?: '1')
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreFile) {
+                storeFile file(keystoreFile)
+                storePassword System.getenv('KEYSTORE_PASSWORD')
+                keyAlias 'upload'
+                keyPassword System.getenv('KEYSTORE_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (keystoreFile) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.activity:activity:1.9.3'
+    implementation 'androidx.core:core:1.13.1'
+    implementation 'androidx.webkit:webkit:1.12.1'
+}
