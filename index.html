@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F4F1FB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15111F" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Trivia about your trips, your crew, and the stuff only you were there for.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Inside Jokes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}button,a{-webkit-tap-highlight-color:transparent}</style>
+<title>Inside Jokes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Figtree:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: phone-first game shell (max 520px) over a drifting gradient "vibe" layer tinted by the current photo; game content sits on solid panels */
+@property --g1{syntax:"<color>";inherits:true;initial-value:#E8492A}
+@property --g2{syntax:"<color>";inherits:true;initial-value:#6C4CE0}
+@property --g3{syntax:"<color>";inherits:true;initial-value:#0C8F80}
+:root{
+  --bg:#F4F1FB; --surface:#FFFFFF; --ink:#1D1733; --muted:#6B6585; --line:#E2DDF0;
+  --coral:#E8492A; --marigold:#E89A10; --teal:#0C8F80; --violet:#6C4CE0;
+  --good:#0C8F80; --bad:#D13B2A; --on-accent:#FFFFFF; --veil:rgba(244,241,251,.35);
+  --on-photo:#FFFFFF; --photo-accent:#FFD25C;
+  --display:"Bagel Fat One","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15111F; --surface:#211B30; --ink:#F3EFFC; --muted:#A49DBB; --line:#352D4A;
+  --coral:#FF6A4A; --marigold:#F5B13A; --teal:#22B8A6; --violet:#8F74F5;
+  --good:#22B8A6; --bad:#FF6A4A; --on-accent:#140F1F; --veil:rgba(21,17,31,.45); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#15111F; --surface:#211B30; --ink:#F3EFFC; --muted:#A49DBB; --line:#352D4A;
+  --coral:#FF6A4A; --marigold:#F5B13A; --teal:#22B8A6; --violet:#8F74F5;
+  --good:#22B8A6; --bad:#FF6A4A; --on-accent:#140F1F; --veil:rgba(21,17,31,.45); color-scheme:dark }
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#vibe{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.22;transition:opacity .8s,--g1 1.2s,--g2 1.2s,--g3 1.2s;
+  background:linear-gradient(125deg,var(--g1),var(--g2),var(--g3),var(--g1));background-size:400% 400%;animation:drift 16s ease-in-out infinite alternate}
+#vibe::after{content:"";position:absolute;inset:0;background:var(--veil)}
+body.playing #vibe{opacity:.9}
+@keyframes drift{0%{background-position:0% 30%}50%{background-position:70% 80%}100%{background-position:100% 20%}}
+.app{position:relative;z-index:1;max-width:520px;margin:0 auto;padding-block:20px 48px;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:.01em}
+h1{font-size:clamp(44px,13vw,64px);line-height:.95}
+h2{font-size:30px;line-height:1.05}
+h3{font-size:20px}
+p{margin:0}
+.muted{color:var(--muted)}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:12px}
+button{font:inherit;cursor:pointer;border:0;color:inherit;background:none}
+button:focus-visible,input:focus-visible,textarea:focus-visible,.pick:focus-within{outline:3px solid var(--violet);outline-offset:2px}
+.btn{padding:14px 20px;border-radius:14px;font-weight:800;font-size:16px;background:var(--ink);color:var(--bg);transition:transform .1s}
+.btn:active{transform:scale(.97)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:var(--surface);color:var(--ink);border:2px solid var(--line)}
+.btn.coral{background:var(--coral);color:var(--on-accent)}
+.btn.small{padding:8px 14px;font-size:14px;border-radius:10px}
+.btn.block{width:100%}
+.link{color:var(--muted);font-weight:700;font-size:14px;text-decoration:underline;text-underline-offset:3px;padding:6px 0}
+a.link{display:inline-block}
+.hero{display:flex;flex-direction:column;gap:10px;padding-top:8px}
+.hero h1 span{color:var(--coral)}
+.hero .tag{font-size:18px;font-weight:600;max-width:30ch}
+.stripes{display:flex;gap:6px}
+.stripes i{height:8px;flex:1;border-radius:4px}
+.stripes i:nth-child(1){background:var(--coral)}.stripes i:nth-child(2){background:var(--marigold)}
+.stripes i:nth-child(3){background:var(--teal)}.stripes i:nth-child(4){background:var(--violet)}
+.deck{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:12px;display:flex;gap:14px;align-items:center}
+.deck .cover{width:64px;height:64px;border-radius:14px;flex:none;object-fit:cover;display:grid;place-items:center;font-family:var(--display);font-size:26px;color:var(--on-accent)}
+.deck .info{flex:1;min-width:0}
+.deck .info h3{overflow-wrap:anywhere}
+.deck .meta{font-size:14px;color:var(--muted)}
+.badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1.5px solid var(--marigold);color:var(--marigold);margin-left:6px;vertical-align:middle;font-family:var(--body)}
+.card,.panel{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.panel{box-shadow:0 12px 40px rgba(20,10,40,.18)}
+label{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+input,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:12px;width:100%;box-sizing:border-box;text-transform:none;letter-spacing:0;font-weight:500}
+textarea{resize:vertical;min-height:70px}
+.qitem{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1.5px solid var(--line)}
+.qitem:first-child{border-top:0}
+.qitem .n{font-family:var(--display);color:var(--muted);font-size:18px;min-width:22px;font-variant-numeric:tabular-nums}
+.qitem img,.qitem .noimg{width:44px;height:44px;border-radius:10px;object-fit:cover;flex:none}
+.qitem .noimg{background:var(--line)}
+.qitem .t{flex:1;min-width:0;overflow-wrap:anywhere}
+.qitem .t small{display:block;color:var(--good);font-weight:700}
+/* album */
+.album{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.album .ph{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--line)}
+.album .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.album .ph .x{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-weight:800}
+.strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.strip img{width:64px;height:64px;border-radius:10px;object-fit:cover;flex:none}
+.upl{position:relative;overflow:hidden}
+.upl input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.pickgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.pick{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:3px solid transparent;background:var(--line);display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--muted)}
+.pick img{width:100%;height:100%;object-fit:cover;display:block}
+.pick.on{border-color:var(--coral)}
+.pick input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+/* players */
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:16px;background:var(--surface);border:2px solid var(--line);font-weight:700;max-width:100%}
+.chip span{min-width:0;overflow-wrap:anywhere}
+.chip small{display:block;font-weight:600;color:var(--muted);font-size:12px}
+.chip button{width:26px;height:26px;border-radius:50%;background:var(--line);font-weight:800;line-height:1;flex:none}
+.chip.add{border-style:dashed;padding:6px 14px;cursor:pointer}
+.partiful{border-color:var(--violet)}
+.partiful .eyebrow{color:var(--violet)}
+/* turn: card stack */
+.turn{text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center}
+.turn .who{font-family:var(--display);font-size:clamp(44px,14vw,66px);line-height:1;color:var(--coral);overflow-wrap:anywhere}
+.turn .nick{font-weight:700;font-size:17px;color:var(--muted)}
+.pile{position:relative;width:180px;height:240px;margin:8px auto}
+.cback{position:absolute;inset:0;border-radius:18px;border:3px solid var(--surface);box-shadow:0 10px 24px rgba(20,10,40,.25);
+  background:repeating-linear-gradient(135deg,var(--coral) 0 14px,var(--marigold) 14px 28px,var(--teal) 28px 42px,var(--violet) 42px 56px);display:grid;place-items:center}
+.cback b{font-family:var(--display);font-weight:400;font-size:40px;color:var(--ink);background:var(--surface);border-radius:50%;width:84px;height:84px;display:grid;place-items:center}
+.pile .cback:nth-child(1){transform:rotate(-7deg) translate(-6px,6px)}
+.pile .cback:nth-child(2){transform:rotate(5deg) translate(5px,3px)}
+.pile .cback:nth-child(3){transition:transform .5s cubic-bezier(.5,-.3,.6,1),opacity .5s}
+.pile .cback.draw{transform:translateY(-140%) rotate(18deg) scale(1.08);opacity:0}
+/* play card */
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.progress{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--coral);transition:width .3s}
+.pcard{perspective:1200px}
+.pcard .inner{position:relative;transform-style:preserve-3d}
+.pcard.deal .inner{animation:deal .9s cubic-bezier(.2,.8,.25,1) both}
+@keyframes deal{0%{transform:translateY(-70px) rotate(-8deg) rotateY(180deg) scale(.85);opacity:0}25%{opacity:1}100%{transform:none;opacity:1}}
+.face{backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:20px;overflow:hidden}
+.front{background:var(--surface);border:2px solid var(--line);box-shadow:0 14px 40px rgba(20,10,40,.22)}
+.front .photo{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;max-width:100%}
+.front .qtext{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px}
+.back{position:absolute;inset:0;transform:rotateY(180deg)}
+.back.cback{border-radius:20px}
+.question{font-family:var(--display);font-size:clamp(24px,6.5vw,30px);line-height:1.1;text-wrap:balance}
+.answers{display:flex;flex-direction:column;gap:10px}
+.ans{display:flex;align-items:center;gap:14px;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:12px 14px;font-weight:700;font-size:17px;transition:transform .1s,border-color .2s,opacity .2s}
+.ans:active{transform:scale(.98)}
+.ans .k{width:36px;height:36px;border-radius:10px;flex:none;display:grid;place-items:center;font-family:var(--display);font-size:18px;color:var(--on-accent)}
+.ans:nth-child(1) .k{background:var(--coral)}.ans:nth-child(2) .k{background:var(--marigold)}
+.ans:nth-child(3) .k{background:var(--teal)}.ans:nth-child(4) .k{background:var(--violet)}
+.ans span:last-child{min-width:0;overflow-wrap:anywhere}
+.ans.right{border-color:var(--good);box-shadow:0 0 0 2px var(--good) inset}
+.ans.wrong{border-color:var(--bad)}
+.ans.dim{opacity:.55}
+.verdict{border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:6px;border:2px solid;background:var(--surface)}
+.verdict.good{border-color:var(--good)}.verdict.bad{border-color:var(--bad)}
+.verdict b{font-family:var(--display);font-weight:400;font-size:24px}
+.verdict.good b{color:var(--good)}.verdict.bad b{color:var(--bad)}
+.story{font-size:15px}
+.story em{font-style:normal;font-weight:800;color:var(--muted);font-size:12px;letter-spacing:.1em;text-transform:uppercase;display:block}
+.scores{display:flex;flex-direction:column;gap:8px}
+.score{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;background:var(--surface);border:2px solid var(--line)}
+.score .pl{font-family:var(--display);font-size:20px;width:30px;color:var(--muted)}
+.score .nm{flex:1;font-weight:800;min-width:0;overflow-wrap:anywhere}
+.score .nm small{display:block;font-weight:600;color:var(--muted);font-size:13px}
+.score .pt{font-variant-numeric:tabular-nums;font-weight:800}
+.score.first{border-color:var(--marigold)}
+.score.first .pl{color:var(--marigold)}
+.winner{text-align:center;display:flex;flex-direction:column;gap:8px}
+.winner .who{font-family:var(--display);font-size:clamp(44px,13vw,64px);color:var(--marigold);line-height:1;overflow-wrap:anywhere}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:13px;white-space:pre-wrap;word-break:break-all;max-height:160px;overflow:auto;background:var(--bg);border-radius:10px;padding:10px}
+.seg{display:flex;background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;padding:9px 6px;border-radius:9px;font-weight:800;font-size:14px;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(20,10,40,.15)}
+.prompts{display:flex;flex-wrap:wrap;gap:6px}
+.prompt{padding:7px 12px;border-radius:999px;border:2px solid var(--line);font-weight:700;font-size:14px;background:var(--surface);text-align:left}
+.prompt:hover{border-color:var(--coral)}
+.zoomset{display:grid;grid-template-columns:1fr 110px;gap:10px;align-items:start}
+.zoomset .full{position:relative;border-radius:12px;overflow:hidden;cursor:crosshair;min-width:0}
+.zoomset .full img{display:block;width:100%}
+.zoomset .dot{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--coral);pointer-events:none}
+.zoomset .peek{aspect-ratio:1;border-radius:12px;overflow:hidden;max-width:100%}
+.zoomset .peek img{width:100%;height:100%;object-fit:cover;transform:scale(3.2);display:block}
+label.toggle{display:flex;flex-direction:row;align-items:flex-start;gap:10px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--ink);font-size:15px}
+.toggle input{width:22px;height:22px;flex:none;accent-color:var(--coral);margin:0}
+.hint{font-size:13px;color:var(--muted)}
+.photoWrap{overflow:hidden;aspect-ratio:4/3;max-width:100%}
+.photoWrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 1.4s cubic-bezier(.2,.8,.2,1)}
+.photoWrap img.zoom{transform:scale(3.2)}
+.kind{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--violet)}
+.ph .mk{position:absolute;left:6px;bottom:6px;padding:5px 10px;border-radius:999px;background:rgba(0,0,0,.65);color:#fff;font-weight:800;font-size:12px}
+.qrow{display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center}
+.qrow img{width:72px;height:72px;border-radius:12px;object-fit:cover}
+.stakes{display:flex;flex-direction:column;gap:10px}
+.stake{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.stake.on{border-color:var(--coral)}
+.stake .title{font-weight:800;font-size:16px}
+.stars{color:var(--marigold);font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tier{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--marigold)}
+.hidden-photo{display:flex;align-items:center;gap:12px}
+.hidden-photo .lock{width:56px;height:56px;border-radius:12px;flex:none;display:grid;place-items:center;font-family:var(--display);font-size:28px;color:var(--ink);
+  background:repeating-linear-gradient(135deg,var(--coral) 0 8px,var(--marigold) 8px 16px,var(--teal) 16px 24px,var(--violet) 24px 32px)}
+.hidden-photo .lock span{background:var(--surface);border-radius:50%;width:34px;height:34px;display:grid;place-items:center}
+.reward{display:flex;flex-direction:column;gap:10px}
+.owe{font-size:17px;font-weight:600}
+.owe b{font-family:var(--display);font-weight:400;font-size:28px;color:var(--good)}
+.dare{font-family:var(--display);font-size:22px;line-height:1.15;color:var(--coral)}
+.answerlist{display:flex;flex-direction:column;gap:10px}
+.anon{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:14px 16px;font-size:18px;font-weight:600;overflow-wrap:anywhere}
+.anon small{display:block;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--violet);margin-bottom:4px}
+.cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.cats button{flex:none;padding:8px 14px;border-radius:999px;border:2px solid var(--line);background:var(--surface);font-weight:800;font-size:14px}
+.cats button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cats button.m{border-color:var(--coral);color:var(--coral)}
+.cats button.m.on{background:var(--coral);color:var(--on-accent)}
+.libq{display:flex;flex-direction:column;gap:8px}
+.lq{background:var(--surface);border:2px solid var(--line);border-radius:14px;overflow:hidden}
+.lq>button{width:100%;text-align:left;padding:12px 14px;font-weight:700;font-size:16px;display:flex;gap:10px;align-items:center}
+.lq>button span:first-child{flex:1;min-width:0;overflow-wrap:anywhere}
+.lq .tagx{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);flex:none;text-align:right}
+.lq.sel{border-color:var(--coral)}
+.lq .ansbox{padding:0 14px 14px;display:flex;flex-direction:column;gap:8px}
+.libphoto{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:12px;display:block;max-width:100%}
+button.pick{padding:0}
+.kind.m{color:var(--coral)}
+#postcard{position:absolute;left:0;right:0;top:0;height:calc(min(46vh,380px) + 190px);z-index:0;pointer-events:none;background-size:cover;background-position:center 75%;opacity:0;transition:opacity .6s}
+#postcard::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(12,8,24,.12) 0%,rgba(12,8,24,.38) 50%,rgba(12,8,24,.25) 68%,var(--bg) 100%)}
+body.pc #postcard{opacity:1}
+.hero.onphoto{min-height:min(46vh,380px);justify-content:flex-end;color:var(--on-photo);text-shadow:0 2px 18px rgba(0,0,0,.45)}
+.hero.onphoto h1 span{color:var(--photo-accent)}
+.where{align-self:flex-start;background:rgba(12,8,24,.55);color:var(--on-photo);border-radius:999px;padding:8px 14px;font-weight:800;font-size:13px;letter-spacing:.04em;text-shadow:none;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.where em{font-style:normal;opacity:.75;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:11px;margin-right:6px}
+.sug{display:flex;flex-direction:column;border:2px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.sug:empty{display:none}
+.sug button{text-align:left;padding:11px 14px;font-weight:700;border-top:1.5px solid var(--line);display:flex;gap:8px;align-items:baseline}
+.sug button:first-child{border-top:0;background:var(--bg)}
+.sug button small{color:var(--muted);font-weight:600}
+.pcprev{width:100%;aspect-ratio:3/1;object-fit:cover;border-radius:12px;display:block;max-width:100%}
+.placeline{font-size:14px;font-weight:700;color:var(--muted)}
+.onpc .eyebrow,.onpc .link{color:var(--on-photo);text-shadow:0 1px 8px rgba(0,0,0,.6)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;font-size:14px;z-index:20;max-width:90vw;text-align:center}
+.err{color:var(--bad);font-weight:700;font-size:14px}
+.pop{animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(.94)}60%{transform:scale(1.02)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<div id="vibe" aria-hidden="true"></div>
+<div id="postcard" aria-hidden="true"></div>
+<div class="app" id="app"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const COLORS=["var(--coral)","var(--teal)","var(--violet)","var(--marigold)"];
+const BASE_PAL=["#E8492A","#6C4CE0","#0C8F80"];
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- sample photos, painted on the fly ---------- */
+const SCENES=[
+ {name:"Lake",sky:["#8FD3F0","#F9DCA6"],ground:"#1E8C93",draw:(c,w,h)=>{sun(c,w*.72,h*.35,46,"#FFD25C");hills(c,w,h,"#2F6B5E",.62);c.fillStyle="#1E8C93";c.fillRect(0,h*.7,w,h*.3)}},
+ {name:"Blue house",sky:["#1F4FD1","#2E63E8"],draw:(c,w,h)=>{c.fillStyle="#1F4FD1";c.fillRect(0,0,w,h);c.fillStyle="#E8335A";c.fillRect(w*.38,h*.38,w*.24,h*.62);c.fillStyle="#F7C948";c.fillRect(w*.08,h*.2,w*.18,h*.18);c.fillRect(w*.74,h*.2,w*.18,h*.18);[[.1,.85,70],[.9,.88,80],[.25,.95,50]].forEach(([x,y,r])=>{c.fillStyle="#2E9E57";c.beginPath();c.arc(w*x,h*y,r,0,7);c.fill()})}},
+ {name:"Plaza",sky:["#F6B26B","#F9E1B0"],draw:(c,w,h)=>{c.fillStyle="#C9A27A";c.fillRect(0,h*.68,w,h*.32);c.fillStyle="#8E5A3C";c.fillRect(w*.1,h*.36,w*.8,h*.32);for(let i=0;i<8;i++){c.fillStyle="#6E4029";c.fillRect(w*(.14+i*.095),h*.44,w*.04,h*.12)}c.fillStyle="#555";c.fillRect(w*.5,h*.1,4,h*.58);c.fillStyle="#1F7A4D";c.fillRect(w*.5+4,h*.1,40,50);c.fillStyle="#fff";c.fillRect(w*.5+44,h*.1,40,50);c.fillStyle="#D8332E";c.fillRect(w*.5+84,h*.1,40,50)}},
+ {name:"Boulevard",sky:["#5B3FA8","#F28A5B"],draw:(c,w,h)=>{c.fillStyle="#3B2C5E";c.fillRect(0,h*.75,w,h*.25);c.fillStyle="#E9C46A";c.fillRect(w*.47,h*.22,w*.06,h*.53);c.beginPath();c.arc(w*.5,h*.18,16,0,7);c.fill();for(let i=0;i<9;i++){c.fillStyle="#2A1F45";c.fillRect(i*w/9+8,h*(.5+(i%3)*.06),w/9-16,h)}}},
+ {name:"Boats",sky:["#A6E3D8","#F7F3D6"],draw:(c,w,h)=>{c.fillStyle="#2C9C8A";c.fillRect(0,h*.62,w,h*.38);const cols=["#E8335A","#F7C948","#2E9E57","#2E63E8","#F28A2E"];c.fillStyle="#7A3E1E";c.fillRect(w*.15,h*.58,w*.7,h*.12);cols.forEach((col,i)=>{c.fillStyle=col;c.fillRect(w*(.17+i*.135),h*.36,w*.12,h*.08)});c.fillStyle="#7A3E1E";c.fillRect(w*.18,h*.44,6,h*.14);c.fillRect(w*.8,h*.44,6,h*.14)}},
+ {name:"Volcanoes",sky:["#6FB6F0","#D7ECFA"],draw:(c,w,h)=>{c.fillStyle="#5C6B8A";c.beginPath();c.moveTo(0,h);c.lineTo(w*.32,h*.3);c.lineTo(w*.64,h);c.fill();c.fillStyle="#46557A";c.beginPath();c.moveTo(w*.38,h);c.lineTo(w*.72,h*.4);c.lineTo(w*1.05,h);c.fill();c.fillStyle="#fff";c.beginPath();c.moveTo(w*.32,h*.3);c.lineTo(w*.25,h*.45);c.lineTo(w*.39,h*.45);c.fill();c.fillStyle="#8BBF6A";c.fillRect(0,h*.86,w,h*.14)}}
+];
+function sun(c,x,y,r,col){c.fillStyle=col;c.beginPath();c.arc(x,y,r,0,7);c.fill()}
+function hills(c,w,h,col,y){c.fillStyle=col;c.beginPath();c.moveTo(0,h*y);for(let x=0;x<=w;x+=20)c.lineTo(x,h*y-Math.sin(x/70)*18-10);c.lineTo(w,h);c.lineTo(0,h);c.fill()}
+const artCache={};
+function sampleArt(n){
+  if(artCache[n])return artCache[n];
+  const s=SCENES[n%SCENES.length],cv=document.createElement("canvas"),w=cv.width=640,h=cv.height=480,c=cv.getContext("2d");
+  const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,s.sky[0]);g.addColorStop(1,s.sky[1]);c.fillStyle=g;c.fillRect(0,0,w,h);
+  s.draw(c,w,h);
+  c.fillStyle="rgba(0,0,0,.55)";c.beginPath();c.roundRect?c.roundRect(16,h-52,178,36,18):c.rect(16,h-52,178,36);c.fill();
+  c.fillStyle="#fff";c.font="700 16px system-ui,sans-serif";c.fillText("SAMPLE PHOTO",36,h-28);
+  return artCache[n]=cv.toDataURL("image/jpeg",.85);
+}
+/* ---------- places + postcard art ---------- */
+const PLACES=(()=>{
+  const cities=("Mexico City|Mexico;Cancún|Mexico;Tulum|Mexico;Oaxaca|Mexico;Guadalajara|Mexico;Puerto Vallarta|Mexico;Cabo San Lucas|Mexico;San Miguel de Allende|Mexico;"+
+  "New York|United States;Los Angeles|United States;San Francisco|United States;Las Vegas|United States;Miami|United States;Chicago|United States;New Orleans|United States;Nashville|United States;Austin|United States;Seattle|United States;Honolulu|United States;San Diego|United States;Boston|United States;Washington DC|United States;Denver|United States;Orlando|United States;Portland|United States;Scottsdale|United States;"+
+  "Toronto|Canada;Vancouver|Canada;Montreal|Canada;Banff|Canada;Havana|Cuba;San Juan|Puerto Rico;Punta Cana|Dominican Republic;Nassau|Bahamas;Montego Bay|Jamaica;Aruba|Aruba;"+
+  "Bogotá|Colombia;Medellín|Colombia;Cartagena|Colombia;Lima|Peru;Cusco|Peru;Buenos Aires|Argentina;Rio de Janeiro|Brazil;São Paulo|Brazil;Santiago|Chile;Quito|Ecuador;San José|Costa Rica;"+
+  "London|United Kingdom;Edinburgh|United Kingdom;Dublin|Ireland;Paris|France;Nice|France;Barcelona|Spain;Madrid|Spain;Ibiza|Spain;Seville|Spain;Lisbon|Portugal;Porto|Portugal;"+
+  "Rome|Italy;Florence|Italy;Venice|Italy;Milan|Italy;Amalfi Coast|Italy;Amsterdam|Netherlands;Berlin|Germany;Munich|Germany;Prague|Czechia;Vienna|Austria;Budapest|Hungary;"+
+  "Athens|Greece;Santorini|Greece;Mykonos|Greece;Istanbul|Türkiye;Reykjavík|Iceland;Copenhagen|Denmark;Stockholm|Sweden;Oslo|Norway;Zurich|Switzerland;Dubrovnik|Croatia;Split|Croatia;Brussels|Belgium;Kraków|Poland;"+
+  "Tokyo|Japan;Kyoto|Japan;Osaka|Japan;Seoul|South Korea;Bangkok|Thailand;Phuket|Thailand;Chiang Mai|Thailand;Bali|Indonesia;Singapore|Singapore;Hong Kong|Hong Kong;Hanoi|Vietnam;Ho Chi Minh City|Vietnam;Manila|Philippines;Shanghai|China;"+
+  "Dubai|United Arab Emirates;Doha|Qatar;Tel Aviv|Israel;Marrakech|Morocco;Cairo|Egypt;Cape Town|South Africa;Nairobi|Kenya;Mumbai|India;New Delhi|India;Goa|India;Sydney|Australia;Melbourne|Australia;Auckland|New Zealand;Queenstown|New Zealand")
+  .split(";").map(s=>{const [city,country]=s.split("|");return {city,country,label:city===country?city:city+", "+country}});
+  const have=new Set(cities.filter(c=>c.city===c.country).map(c=>c.country));
+  const countries=("Mexico;United States;Canada;Cuba;Jamaica;Dominican Republic;Puerto Rico;Bahamas;Costa Rica;Colombia;Peru;Argentina;Brazil;Chile;Ecuador;United Kingdom;Ireland;France;Spain;Portugal;Italy;Netherlands;Germany;Czechia;Austria;Hungary;Greece;Türkiye;Iceland;Denmark;Sweden;Norway;Switzerland;Croatia;Belgium;Poland;Japan;South Korea;Thailand;Indonesia;Vietnam;Philippines;China;India;United Arab Emirates;Qatar;Israel;Morocco;Egypt;South Africa;Kenya;Australia;New Zealand")
+  .split(";").filter(n=>!have.has(n)).map(n=>({city:"",country:n,label:n}));
+  return [...cities,...countries];
+})();
+const norm=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().trim();
+function findPlaces(q){q=norm(q);if(!q)return [];
+  return PLACES.map(p=>{const l=norm(p.label),c=norm(p.city||p.country);
+    const sc=c.startsWith(q)?0:l.startsWith(q)?1:l.split(/[ ,]+/).some(w=>w.startsWith(q))?2:l.includes(q)?3:9;return {p,sc}})
+   .filter(x=>x.sc<9).sort((a,b)=>a.sc-b.sc||(a.p.city?0:1)-(b.p.city?0:1)||a.p.label.localeCompare(b.p.label)).slice(0,8).map(x=>x.p)}
+function hashStr(s){let h=2166136261;for(const ch of s){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function rng(seed){return()=>{seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const pcCache={};
+function postcardArt(label){
+  if(pcCache[label])return pcCache[label];
+  const r=rng(hashStr(norm(label))),h=Math.floor(r()*360),hh=n=>(h+n)%360;
+  const cv=document.createElement("canvas"),W=cv.width=1200,H=cv.height=800,c=cv.getContext("2d");
+  const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,`hsl(${h},55%,26%)`);g.addColorStop(.5,`hsl(${hh(35)},70%,52%)`);g.addColorStop(.85,`hsl(${hh(65)},85%,70%)`);
+  c.fillStyle=g;c.fillRect(0,0,W,H);
+  for(let i=0;i<60;i++){c.fillStyle=`rgba(255,255,255,${.15+r()*.4})`;c.fillRect(r()*W,r()*H*.35,2,2)}
+  const sx=W*(.2+r()*.6),sy=H*(.45+r()*.12),sg=c.createRadialGradient(sx,sy,0,sx,sy,300);
+  sg.addColorStop(0,`hsla(${hh(70)},100%,88%,.95)`);sg.addColorStop(.35,`hsla(${hh(70)},100%,78%,.45)`);sg.addColorStop(1,"hsla(0,0%,100%,0)");
+  c.fillStyle=sg;c.fillRect(0,0,W,H);c.fillStyle=`hsl(${hh(70)},100%,90%)`;c.beginPath();c.arc(sx,sy,70+r()*30,0,7);c.fill();
+  if(r()<.6){c.fillStyle=`hsl(${h},32%,36%)`;c.beginPath();c.moveTo(0,H*.72);let x=0;
+    while(x<W){const w=160+r()*260;c.lineTo(x+w/2,H*(.42+r()*.2));c.lineTo(x+w,H*(.62+r()*.08));x+=w}c.lineTo(W,H);c.lineTo(0,H);c.fill()}
+  [[.64,30,.55],[.72,20,.8],[.82,11,1]].forEach(([base,l,sc],li)=>{let x=-20;
+    while(x<W){const body=`hsl(${h},35%,${l}%)`,w=(40+r()*90)*sc,bh=(60+r()*230)*sc*(li==2?.75:1),top=H*base-bh,k=r();
+      c.fillStyle=body;c.fillRect(x,top,w,H-top);
+      if(k<.12){c.beginPath();c.arc(x+w/2,top,w/2,Math.PI,0);c.fill()}
+      else if(k<.22){c.beginPath();c.moveTo(x+w*.3,top);c.lineTo(x+w/2,top-60*sc);c.lineTo(x+w*.7,top);c.fill()}
+      else if(k<.3){c.fillRect(x+w/2-3,top-55*sc,6,55*sc)}
+      if(li==2){c.fillStyle=`hsla(${hh(60)},100%,76%,.6)`;for(let wy=top+14;wy<H-10;wy+=22)for(let wx=x+8;wx<x+w-10;wx+=16)if(r()<.33)c.fillRect(wx,wy,6,9)}
+      x+=w+r()*6}});
+  return pcCache[label]=cv.toDataURL("image/jpeg",.82);
+}
+const latestTrip=()=>decks.filter(d=>d.place).sort((a,b)=>(b.placeAt||0)-(a.placeAt||0))[0];
+const srcOf=p=>!p?null:(p.startsWith("sample:")?sampleArt(+p.slice(7)):p);
+
+/* ---------- palette from a photo ---------- */
+const palCache={};
+function paletteOf(src){
+  if(!src)return Promise.resolve(BASE_PAL);
+  if(palCache[src])return Promise.resolve(palCache[src]);
+  return new Promise(res=>{const im=new Image();im.onload=()=>{
+    try{const cv=document.createElement("canvas");cv.width=cv.height=36;const c=cv.getContext("2d");c.drawImage(im,0,0,36,36);
+      const d=c.getImageData(0,0,36,36).data,b=Array.from({length:12},()=>({w:0,r:0,g:0,b:0}));
+      for(let i=0;i<d.length;i+=4){const r=d[i]/255,g=d[i+1]/255,bl=d[i+2]/255,mx=Math.max(r,g,bl),mn=Math.min(r,g,bl),l=(mx+mn)/2;
+        if(l<.12||l>.93)continue;const s=mx===mn?0:(l>.5?(mx-mn)/(2-mx-mn):(mx-mn)/(mx+mn));if(s<.18)continue;
+        let hh=mx===r?((g-bl)/(mx-mn))%6:mx===g?(bl-r)/(mx-mn)+2:(r-g)/(mx-mn)+4;hh=(hh*60+360)%360;
+        const k=b[Math.floor(hh/30)],wt=s*s;k.w+=wt;k.r+=d[i]*wt;k.g+=d[i+1]*wt;k.b+=d[i+2]*wt}
+      const top=b.filter(x=>x.w>0).sort((a,z)=>z.w-a.w).slice(0,3).map(x=>`rgb(${x.r/x.w|0},${x.g/x.w|0},${x.b/x.w|0})`);
+      while(top.length<3)top.push(BASE_PAL[top.length]);
+      res(palCache[src]=top)}catch(e){res(BASE_PAL)}};im.onerror=()=>res(BASE_PAL);im.src=src});
+}
+function setVibe(src){paletteOf(src).then(p=>{const v=document.getElementById("vibe");v.style.setProperty("--g1",p[0]);v.style.setProperty("--g2",p[1]);v.style.setProperty("--g3",p[2])})}
+
+/* ---------- data ---------- */
+const CDMX={city:"Mexico City",country:"Mexico",label:"Mexico City, Mexico"};
+const SAMPLE={id:"sample-cdmx",name:"Mexico City Trip",color:0,sample:true,place:CDMX,placeAt:1,
+ album:SCENES.map((s,i)=>({id:"s"+i,src:"sample:"+i})),event:null,
+ questions:[
+ {q:"What lake was Mexico City built on top of?",a:"Lake Texcoco",wrong:["Lake Chapala","Lake Pátzcuaro","Lake Atitlán"],photo:"s0",story:"The Aztec capital Tenochtitlan sat on an island in the lake. Parts of the city still sink every year because of it."},
+ {q:"Frida Kahlo's Casa Azul is in which neighborhood?",a:"Coyoacán",wrong:["Roma Norte","Condesa","Polanco"],photo:"s1",story:"Swap this for the real story: who almost missed the ticket time slot?"},
+ {q:"What's the giant main square in the historic center called?",a:"The Zócalo",wrong:["Plaza Garibaldi","Alameda Central","Plaza Río de Janeiro"],photo:"s2",story:"Officially it's Plaza de la Constitución."},
+ {q:"Which boulevard is home to the Angel of Independence?",a:"Paseo de la Reforma",wrong:["Avenida Insurgentes","Calzada de Tlalpan","Avenida Juárez"],photo:"s3",story:"Add your crew's photo-op story here."},
+ {q:"The colorful boats at Xochimilco are called…",a:"Trajineras",wrong:["Chalupas","Pangas","Gondolas"],photo:"s4",story:"Perfect spot for a crew question: who fell asleep on one?"},
+ {q:"Roughly how high above sea level is Mexico City?",a:"About 2,240 meters",wrong:["About 800 meters","About 1,200 meters","About 3,600 meters"],photo:"s5",story:"That's why the first mezcal hit faster than expected."}
+]};
+const ZOOM_SAMPLE={q:"Zoomed way in. What landmark is this?",a:"The Angel of Independence",wrong:["Monumento a la Revolución","Palacio de Bellas Artes","Torre Latinoamericana"],photo:"s3",type:"custom",zoom:true,fx:50,fy:22,story:"Fans pack the roundabout around it to celebrate big wins."};
+SAMPLE.questions.push(ZOOM_SAMPLE);SAMPLE.v2=1;
+const PROMPTS=[
+ {t:"Who took this photo?",crew:1},
+ {t:"Whose plate is this?",crew:1},
+ {t:"Whose head is this?",crew:1,zoom:1},
+ {t:"Who's missing from this photo?",crew:1},
+ {t:"Who said something unforgettable right after this?",crew:1},
+ {t:"What was happening right before this?",crew:0},
+ {t:"Zoomed in: what is this?",crew:0,zoom:1},
+ {t:"Where was this taken?",crew:0}
+];
+/* question library: [category, question, answer is a crew member, mystery zoom] */
+const LIB_CATS=["Classic","Food","Night out","Story","Mature"];
+const LIB=[
+ ["Classic","Who took this photo?",1],
+ ["Classic","Whose idea was this?",1],
+ ["Classic","Who was the last one ready right before this?",1],
+ ["Classic","Who would post this photo first?",1],
+ ["Classic","Who's missing from this photo?",1],
+ ["Classic","Who complained the most on this day?",1],
+ ["Classic","Who got lost on the way here?",1],
+ ["Classic","Whose head is this?",1,1],
+ ["Classic","Who has this exact photo saved as a favorite?",1],
+ ["Food","Whose plate is this?",1],
+ ["Food","Who ordered this?",1,1],
+ ["Food","Who said “I'm not that hungry” and then finished all of this?",1],
+ ["Food","Who took 15 photos of this before anyone could eat?",1],
+ ["Food","Who still owes money for this meal?",1],
+ ["Food","Who was way too confident about the hot sauce here?",1],
+ ["Food","Who would give this place 10/10 no matter what?",1],
+ ["Night out","Who said “just one more” right after this?",1],
+ ["Night out","Who disappeared within an hour of this photo?",1],
+ ["Night out","Who lost something this night?",1],
+ ["Night out","Who was the self-appointed DJ here?",1],
+ ["Night out","Who was the first to want to go home?",1],
+ ["Night out","Who made friends with a total stranger this night?",1],
+ ["Story","What happened five minutes after this?",0],
+ ["Story","What was everyone arguing about here?",0],
+ ["Story","What song was playing right now?",0],
+ ["Story","Where was this taken?",0],
+ ["Story","Zoomed in: what is this?",0,1],
+ ["Story","What time do you think it was?",0],
+ ["Mature","Who was the drunkest when this was taken?",1],
+ ["Mature","Who threw up within three hours of this photo?",1],
+ ["Mature","Who had the worst hangover the morning after this?",1],
+ ["Mature","Who has zero memory of this moment?",1],
+ ["Mature","Who said something here that should be deleted from the group chat?",1],
+ ["Mature","Who was shamelessly flirting right before this?",1],
+ ["Mature","Who lied to their boss about where they were this week?",1],
+ ["Mature","Whose bank account is still recovering from this?",1],
+ ["Mature","Who's most likely to get kicked out of this place?",1],
+ ["Mature","Who smelled the worst at this point of the trip?",1],
+ ["Mature","Who cried at some point this night?",1],
+ ["Mature","Who's hiding a way worse photo from this exact moment?",1]
+].map(([cat,t,crew,zoom])=>({cat,t,crew:!!crew,zoom:!!zoom}));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
+let decks=store.get("ij_decks",null)||[SAMPLE];
+decks.forEach(d=>{d.album=d.album||[];d.event=d.event||null;
+  if(d.id==="sample-cdmx"&&!d.album.length){d.album=SAMPLE.album;d.questions.forEach((q,i)=>{if(!q.photo&&SAMPLE.questions[i]&&q.q===SAMPLE.questions[i].q)q.photo=SAMPLE.questions[i].photo})}
+  if(d.id==="sample-cdmx"&&d.place===undefined){d.place=CDMX;d.placeAt=1}
+  if(d.id==="sample-cdmx"&&!d.v2){if(!d.questions.some(q=>q.zoom))d.questions.push({...ZOOM_SAMPLE});d.v2=1}});
+function crewNames(d){const seen=new Set(),out=[];
+  [...players.map(p=>p.name),...(d.event?.guests||[]),...d.questions.filter(q=>q.type==="crew").map(q=>q.a)].forEach(n=>{n=(n||"").trim();const k=n.toLowerCase();if(n&&!seen.has(k)){seen.add(k);out.push(n)}});
+  return out}
+const crewList=(d,id)=>`<datalist id="${id}">${crewNames(d).map(n=>`<option value="${esc(n)}">`).join("")}</datalist>`;
+let players=(store.get("ij_players",[])).map(p=>typeof p==="string"?{name:p,nick:""}:p);
+let S={screen:"home",k:{cash:false,amount:5,photo:false,photoSrc:null,dare:"",secret:false,...store.get("ij_stakes",{}),photoSrc:null}};
+S.mature=store.get("ij_mature",false);
+const saveK=()=>{const {photoSrc,...rest}=S.k;store.set("ij_stakes",rest)};
+const P=n=>players.find(p=>p.name===n);
+function tierOf(w){return w>=10?"Legend":w>=6?"Gold":w>=3?"Silver":w>=1?"Bronze":""}
+function starsOf(n){const p=P(n);if(!p||!p.wins)return "";return `<span class="stars">★ ${p.wins}</span>${p.streak>1?` <span class="hint">· ${p.streak} wins in a row</span>`:""}`}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function save(){const ok=store.set("ij_decks",decks)&&store.set("ij_players",players);if(!ok)toast("This phone's storage is full. Remove a few photos to keep saving.");return ok}
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2200)}
+function go(screen,extra={}){S={...S,...extra,screen};render();window.scrollTo(0,0)}
+const D=()=>decks[S.di];
+const photoSrc=(d,id)=>{const p=d.album.find(x=>x.id===id);return p?srcOf(p.src):null};
+const coverOf=d=>d.album.length?srcOf(d.album[0].src):null;
+
+function render(){
+  const playing=["turn","play","end","secret"].includes(S.screen);
+  document.body.classList.toggle("playing",playing);
+  const L=S.screen==="home"&&latestTrip(),pc=$("postcard");
+  document.body.classList.toggle("pc",!!L);
+  if(L)pc.style.backgroundImage=`url(${postcardArt(L.place.label)})`;
+  if(S.screen==="play"){const q=S.g.qs[S.g.i];setVibe(q.src||coverOf(D()))}
+  else if(S.di!=null&&D()&&S.screen!=="home")setVibe(coverOf(D()));
+  else setVibe(null);
+  $("app").innerHTML={home,deck,edit,album,quick,library,players:setup,turn,play,end,secret,share,event:eventScreen}[S.screen]();
+}
+
+/* ---------- screens ---------- */
+function home(){
+  const L=latestTrip();
+  return `<header class="hero ${L?"onphoto":""}">
+    <div class="stripes"><i></i><i></i><i></i><i></i></div>
+    <h1>Inside <span>Jokes</span></h1>
+    <p class="tag">Trivia about your trips, your crew, and the stuff only you were there for.</p>
+    ${L?`<button class="where" onclick="openDeck(${decks.indexOf(L)})"><em>Latest trip</em>${esc(L.place.label)}</button>`:""}
+  </header>
+  <div class="row between ${L?"onpc":""}"><span class="eyebrow">Your decks</span>
+    <button class="link" onclick="go('share',{importing:true,shareText:'',err:''})">Import a friend's deck</button></div>
+  <div class="stack">${decks.map((d,i)=>{const c=coverOf(d);return `
+    <div class="deck">
+      ${c?`<img class="cover" src="${c}" alt="">`:`<div class="cover" style="background:${COLORS[d.color%4]}">${esc(d.name.trim()[0]||"?")}</div>`}
+      <div class="info"><h3>${esc(d.name)}${d.sample?'<span class="badge">Sample</span>':""}</h3>
+        <div class="meta">${d.place?esc(d.place.label)+" · ":""}${d.questions.length} question${d.questions.length==1?"":"s"} · ${d.album.length} photo${d.album.length==1?"":"s"}</div></div>
+      <button class="btn small" onclick="openDeck(${i})">Open</button>
+    </div>`}).join("")||'<p class="muted">No decks yet. Make one for your last trip.</p>'}
+  </div>
+  <button class="btn coral block" onclick="newDeck()">New deck</button>`;
+}
+function newDeck(){decks.push({id:"d"+Date.now(),name:"New trip",color:decks.length,album:[],event:null,place:null,questions:[]});save();S.di=decks.length-1;
+  go("deck",{renaming:true,pd:null,sugList:[]});setTimeout(()=>$("dplace")&&$("dplace").focus(),0)}
+function openDeck(i){S.di=i;go("deck",{renaming:false,confirmDel:false,pd:null})}
+
+function deck(){
+  const d=D();
+  return `<button class="link" onclick="go('home')">← All decks</button>
+  ${S.renaming?`<div class="card">
+      <label for="dplace">Where was the trip?</label>
+      <input id="dplace" value="${esc((S.pd||d.place)?.label||"")}" placeholder="Start typing a city or country" autocomplete="off" role="combobox" aria-controls="psug"
+        oninput="S.pd=null;placeSug(this.value)" onkeydown="placeKey(event)">
+      <div class="sug" id="psug" role="listbox"></div>
+      <img class="pcprev" id="pcprev" alt="" ${(S.pd||d.place)?`src="${postcardArt((S.pd||d.place).label)}"`:"hidden"}>
+      <label>Deck name<input id="dname" value="${esc(d.name)}" maxlength="40" onkeydown="if(event.key==='Enter')renameDeck()"></label>
+      <p class="hint">Your latest trip becomes the home screen background.</p>
+      <button class="btn coral small" style="align-self:flex-start" onclick="renameDeck()">Save</button></div>`
+   :`<div class="row between"><div><h2>${esc(d.name)}</h2>${d.place?`<p class="placeline">${esc(d.place.label)}</p>`:""}</div><button class="link" onclick="go('deck',{renaming:true,pd:null})">Edit name &amp; place</button></div>`}
+  ${d.sample?`<p class="muted">This sample uses real Mexico City facts and painted placeholder photos. Swap in your own photos and your crew's moments.</p>`:""}
+  <div class="row"><button class="btn coral" ${d.questions.length<1?"disabled":""} onclick="go('players',{err:''})">Play this deck</button>
+    <button class="btn ghost" onclick="openLib()">Pick from library</button>
+    <button class="btn ghost" onclick="startEdit(-1)">Write your own</button></div>
+
+  <div class="card"><div class="row between"><span class="eyebrow">Photo album · ${d.album.length}</span>
+    <button class="link" onclick="go('album',{confirmPh:null})">${d.album.length?"Open album":"Add photos"}</button></div>
+    ${d.album.length?`<div class="strip">${d.album.slice(0,8).map(p=>`<img src="${srcOf(p.src)}" alt="">`).join("")}</div>`
+      :`<p class="muted">Add trip photos, then put one on each question card. The game background picks up each photo's colors.</p>`}
+  </div>
+
+  <div class="card partiful"><div class="row between"><span class="eyebrow">Partiful event</span>
+    <button class="link" onclick="go('event',{err:''})">${d.event?"Edit":"Link event"}</button></div>
+    ${d.event?`<p><a class="link" style="color:var(--violet)" href="${esc(d.event.url)}" target="_blank" rel="noopener">Open the event on Partiful</a></p>
+      <p class="muted">${d.event.guests.length} guest${d.event.guests.length==1?"":"s"} ready to add as players.</p>
+      <button class="btn small ghost" onclick="go('share',{importing:false,invite:true,shareText:inviteText(S.di)})">Invite the guests to play</button>`
+     :`<p class="muted">Link the event this deck is about and paste its guest list. Guests show up as one-tap players.</p>`}
+  </div>
+
+  <div class="card"><span class="eyebrow">Questions</span>
+    ${d.questions.length?`<div>${d.questions.map((q,i)=>{const s=photoSrc(d,q.photo);return `<div class="qitem"><span class="n">${i+1}</span>
+      ${s?`<img src="${s}" alt="">`:`<span class="noimg"></span>`}
+      <div class="t">${esc(q.q)}<small>${q.type==="crew"?"Crew pick · ":""}${esc(q.a)}${q.zoom?" · Mystery zoom":""}</small></div>
+      <button class="link" onclick="startEdit(${i})">Edit</button></div>`}).join("")}</div>`
+      :`<p class="muted">Add at least one question. One wrong answer is enough; three makes it harder.</p>`}
+  </div>
+  <div class="row between">
+    <button class="link" onclick="go('share',{importing:false,invite:false,shareText:exportDeck(S.di)})">Share deck code</button>
+    <button class="link" onclick="go('deck',{confirmDel:true})">Delete deck</button></div>
+  ${S.confirmDel?`<div class="card"><p>Delete “${esc(d.name)}”, its ${d.questions.length} questions and ${d.album.length} photos?</p>
+    <div class="row"><button class="btn coral small" onclick="delDeck()">Delete</button><button class="btn ghost small" onclick="go('deck',{confirmDel:false})">Keep it</button></div></div>`:""}`;
+}
+function placeSug(v){const box=$("psug");if(!box)return;const list=findPlaces(v),t=v.trim();
+  if(t&&!list.some(p=>norm(p.label)===norm(t)))list.push({city:t,country:"",label:t,custom:true});
+  S.sugList=list;
+  box.innerHTML=list.map((p,i)=>`<button type="button" role="option" onclick="choosePlace(${i})">${p.custom?`Use “${esc(p.label)}”`:esc(p.city||p.country)}${p.custom?"":p.city&&p.city!==p.country?`<small>${esc(p.country)}</small>`:`<small>Country</small>`}</button>`).join("")}
+function placeKey(e){if(e.key==="Enter"){e.preventDefault();if(S.sugList?.length)choosePlace(0);else $("dname").focus()}
+  else if(e.key==="Escape"){$("psug").innerHTML=""}}
+function choosePlace(i){const p=S.sugList[i];if(!p)return;const {custom,...clean}=p;S.pd=clean;
+  $("dplace").value=clean.label;$("psug").innerHTML="";S.sugList=[];
+  const nm=$("dname"),cur=nm.value.trim(),d=D();
+  if(!cur||cur==="New trip"||(d.place&&cur===(d.place.city||d.place.country)+" Trip"))nm.value=(clean.city||clean.country)+" Trip";
+  const im=$("pcprev");im.src=postcardArt(clean.label);im.hidden=false;nm.focus()}
+function renameDeck(){const d=D(),n=$("dname").value.trim(),typed=$("dplace").value.trim();
+  if(S.pd){d.place=S.pd;d.placeAt=Date.now()}
+  else if(!typed)d.place=null;
+  else if(!d.place||norm(typed)!==norm(d.place.label)){const m=PLACES.find(p=>norm(p.label)===norm(typed)||norm(p.city)===norm(typed));d.place=m?{...m}:{city:typed,country:"",label:typed};d.placeAt=Date.now()}
+  if(n)d.name=n;else if(d.place)d.name=(d.place.city||d.place.country)+" Trip";
+  save();go("deck",{renaming:false,pd:null})}
+function delDeck(){decks.splice(S.di,1);save();S.di=null;go("home",{confirmDel:false})}
+
+/* album */
+function album(){
+  const d=D();
+  return `<button class="link" onclick="go('deck')">← ${esc(d.name)}</button>
+  <h2>Photo album</h2>
+  <p class="muted">Photos stay on this phone. Pick several at once from your camera roll.</p>
+  <button class="btn coral upl">Upload photos<input type="file" id="albumfile" accept="image/*" multiple onchange="uploadPhotos(this.files,()=>go('album'))" aria-label="Upload photos"></button>
+  ${d.album.length?`<button class="btn ghost" onclick="go('quick')">Who took these? Make cards fast</button>
+   <div class="album">${d.album.map(p=>`<div class="ph"><img src="${srcOf(p.src)}" alt=""><button class="x" aria-label="Remove photo" onclick="go('album',{confirmPh:'${p.id}'})">×</button><button class="mk" onclick="openLib('${p.id}')">Make card</button></div>`).join("")}</div>`
+   :`<p class="muted">No photos yet.</p>`}
+  ${S.confirmPh?`<div class="card"><p>Remove this photo? Questions using it will show without a picture.</p>
+    <div class="row"><button class="btn coral small" onclick="rmPhoto('${S.confirmPh}')">Remove</button><button class="btn ghost small" onclick="go('album',{confirmPh:null})">Keep it</button></div></div>`:""}`;
+}
+function shrink(file){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{
+  const m=900,sc=Math.min(1,m/Math.max(im.width,im.height)),cv=document.createElement("canvas");cv.width=im.width*sc|0;cv.height=im.height*sc|0;
+  cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);res(cv.toDataURL("image/jpeg",.74))};im.onerror=()=>res(null);im.src=r.result};r.onerror=()=>res(null);r.readAsDataURL(file)})}
+async function uploadPhotos(files,done){
+  const d=D(),added=[];toast("Adding photos…");
+  for(const f of files){const src=await shrink(f);if(src){const id="p"+Date.now()+Math.random().toString(36).slice(2,6);d.album.push({id,src});added.push(id)}}
+  save();toast(added.length?`Added ${added.length} photo${added.length>1?"s":""}`:"Couldn't read those files. Try JPG or PNG photos.");
+  done&&done(added);
+}
+function quick(){
+  const d=D(),used=new Set(d.questions.map(q=>q.photo)),list=d.album.filter(p=>!used.has(p.id));
+  return `<button class="link" onclick="go('album')">← Photo album</button>
+  <h2>Who took these?</h2>
+  <p class="muted">Type who took each photo. Each one becomes a “Who took this photo?” card, and the other choices are your friends' names. Leave a photo blank to skip it.</p>
+  ${list.length?`<div class="card">${list.map(p=>`<div class="qrow"><img src="${srcOf(p.src)}" alt="">
+     <label>Taken by<input id="qk_${p.id}" list="crewq" placeholder="Name" autocomplete="off"></label></div>`).join("")}${crewList(d,"crewq")}</div>
+     <button class="btn coral block" onclick="makeQuick()">Make the cards</button>`
+   :`<p class="muted">Every photo in the album already has a card.</p>`}`;
+}
+function makeQuick(){const d=D(),used=new Set(d.questions.map(q=>q.photo));let n=0;
+  d.album.filter(p=>!used.has(p.id)).forEach(p=>{const el=$("qk_"+p.id),v=el&&el.value.trim();
+    if(v){d.questions.push({q:"Who took this photo?",a:v,wrong:[],story:"",photo:p.id,type:"crew",zoom:false,fx:50,fy:50});n++}});
+  if(!n){toast("Type at least one name first.");return}
+  save();toast(`Made ${n} card${n>1?"s":""}`);go("deck")}
+/* question library */
+function openLib(pid){const d=D();
+  if(pid===undefined){const used=new Set(d.questions.map(q=>q.photo));pid=(d.album.find(p=>!used.has(p.id))||d.album[0]||{}).id||null}
+  go("library",{libPhoto:pid,libSel:null,libPicking:false,err:"",libCat:S.libCat||"Classic"})}
+function setCat(c){S.libCat=c;S.libSel=null;S.err="";render()}
+function setMature(v){S.mature=v;store.set("ij_mature",v);if(!v)S.libCat="Classic";S.libSel=null;render()}
+function libPick(id){S.libPhoto=id;S.libPicking=false;render()}
+function libSelect(i){S.libSel=S.libSel===i?null:i;S.err="";render();setTimeout(()=>$("lib_a")&&$("lib_a").focus(),0)}
+function surprise(){const pool=LIB.map((x,i)=>i).filter(i=>LIB[i].cat===(S.libCat||"Classic"));
+  let i=pool[Math.floor(Math.random()*pool.length)];if(pool.length>1&&i===S.libSel)i=pool[(pool.indexOf(i)+1)%pool.length];libSelect(i)}
+function libItem(x,d){const sel=S.libSel===x.i;
+  return `<div class="lq ${sel?"sel":""}"><button onclick="libSelect(${x.i})" aria-expanded="${sel}"><span>${esc(x.t)}</span><span class="tagx">${x.crew?"Crew pick":"You write it"}${x.zoom?"<br>Zoom":""}</span></button>
+  ${!sel?"":x.crew?`<div class="ansbox"><label>Who's the answer?<input id="lib_a" list="crewl" placeholder="Their name" autocomplete="off" onkeydown="if(event.key==='Enter')libSave(${x.i})"></label>${crewList(d,"crewl")}
+      <p class="hint">The other choices get filled in with your crew's names.</p>${S.err?`<p class="err">${esc(S.err)}</p>`:""}
+      <button class="btn coral" onclick="libSave(${x.i})">Save card</button></div>`
+    :`<div class="ansbox"><p class="hint">This one needs the right answer and a couple of wrong ones.</p><button class="btn coral" onclick="libCustom(${x.i})">Write the answers</button></div>`}</div>`}
+function library(){
+  const d=D(),cat=S.libCat||"Classic",src=S.libPhoto?photoSrc(d,S.libPhoto):null,locked=cat==="Mature"&&!S.mature;
+  const items=LIB.map((x,i)=>({...x,i})).filter(x=>x.cat===cat);
+  const used=new Set(d.questions.map(q=>q.photo)),left=d.album.filter(p=>!used.has(p.id)).length;
+  return `<button class="link" onclick="go('deck')">← ${esc(d.name)}</button>
+  <h2>Question library</h2>
+  <p class="muted">Pick a photo, tap a question, type who it is. After you save, the next photo without a card comes up.</p>
+  <div class="card">
+    ${S.libPicking||!src?`<span class="eyebrow">Choose a photo${d.album.length?` · ${left} without a card`:""}</span>
+      <div class="pickgrid"><button class="pick ${!S.libPhoto?"on":""}" onclick="libPick(null)">None</button>
+      ${d.album.map(p=>`<button class="pick ${S.libPhoto===p.id?"on":""}" onclick="libPick('${p.id}')" aria-label="Use this photo"><img src="${srcOf(p.src)}" alt=""></button>`).join("")}
+      <label class="pick upl">+ New<input type="file" accept="image/*" onchange="uploadPhotos(this.files,ids=>{if(ids[0])S.libPhoto=ids[0];S.libPicking=false;render()})" aria-label="Upload a new photo"></label></div>`
+     :`<img class="libphoto" src="${src}" alt="The photo for this card"><div class="row between"><span class="hint">${left} photo${left==1?"":"s"} still without a card</span><button class="link" onclick="S.libPicking=true;render()">Change photo</button></div>`}
+  </div>
+  <div class="cats">${LIB_CATS.map(c=>`<button class="${c===cat?"on":""} ${c==="Mature"?"m":""}" onclick="setCat('${c}')">${c==="Mature"?"Mature 18+":c}</button>`).join("")}</div>
+  ${locked?`<div class="panel"><h3>Mature questions</h3><p>Drinking, hangovers, bad decisions and roasts. Made for adult friend groups who are all in on the joke.</p>
+      <div class="row"><button class="btn coral" onclick="setMature(true)">Show them</button><button class="btn ghost" onclick="setCat('Classic')">Not now</button></div></div>`
+   :`<div class="libq">${items.map(x=>libItem(x,d)).join("")}</div>
+     <button class="btn ghost block" onclick="surprise()">Surprise me</button>
+     ${cat==="Mature"?`<button class="link" onclick="setMature(false)">Hide mature questions</button>`:""}`}`;
+}
+function libSave(i){const it=LIB[i],v=($("lib_a")?.value||"").trim();
+  if(!v){S.err="Type who the answer is.";render();setTimeout(()=>$("lib_a")&&$("lib_a").focus(),0);return}
+  const d=D(),ph=S.libPhoto||null;
+  d.questions.push({q:it.t,a:v,wrong:[],story:"",photo:ph,type:"crew",zoom:!!(it.zoom&&ph),fx:50,fy:50,mature:it.cat==="Mature"});
+  save();
+  const used=new Set(d.questions.map(q=>q.photo)),nxt=d.album.find(p=>!used.has(p.id));
+  toast(it.zoom&&ph?"Card saved. Edit it to move the zoom spot.":nxt?"Card saved. Next photo up.":"Card saved");
+  S.libSel=null;S.err="";if(nxt)S.libPhoto=nxt.id;render();window.scrollTo(0,0)}
+function libCustom(i){const it=LIB[i];startEdit(-1,{photo:S.libPhoto||null,q:it.t,type:"custom",zoom:!!(it.zoom&&S.libPhoto),mature:it.cat==="Mature"})}
+function rmPhoto(id){const d=D();d.album=d.album.filter(p=>p.id!==id);d.questions.forEach(q=>{if(q.photo===id)q.photo=null});save();go("album",{confirmPh:null})}
+
+/* question editor */
+function startEdit(i,preset={}){const q=i>=0?D().questions[i]:{q:"",a:"",wrong:[],story:"",photo:null};
+  go("edit",{qi:i,err:"",draft:{q:q.q,a:q.a,wrong:[...q.wrong,"","",""].slice(0,3),story:q.story||"",photo:q.photo||null,
+    type:q.type||"custom",zoom:!!q.zoom,fx:q.fx??50,fy:q.fy??50,mature:!!q.mature,...preset}})}
+function readDraft(){if(!$("fq"))return;
+  S.draft={...S.draft,q:$("fq").value,a:$("fa").value,story:$("fs").value};
+  if($("fw0"))S.draft.wrong=[0,1,2].map(i=>$("fw"+i).value);
+  if($("fz"))S.draft.zoom=$("fz").checked}
+function usePrompt(i){readDraft();const p=PROMPTS[i];S.draft.q=p.t;S.draft.type=p.crew?"crew":"custom";if(p.zoom)S.draft.zoom=true;render()}
+function setType(t){readDraft();S.draft.type=t;render()}
+function setFocus(e){readDraft();const r=e.currentTarget.getBoundingClientRect();
+  S.draft.fx=Math.max(8,Math.min(92,Math.round((e.clientX-r.left)/r.width*100)));
+  S.draft.fy=Math.max(8,Math.min(92,Math.round((e.clientY-r.top)/r.height*100)));render()}
+function edit(){
+  const d=D(),f=S.draft,ps=f.photo?photoSrc(d,f.photo):null,crew=f.type==="crew",gl=d.event?.guests?.length;
+  return `<button class="link" onclick="go('deck')">← ${esc(d.name)}</button>
+  <h2>${S.qi>=0?"Edit question":"New question"}</h2>
+  <div class="card">
+    <span class="eyebrow">Card photo</span>
+    <div class="pickgrid">
+      <label class="pick ${!f.photo?"on":""}">None<input type="radio" name="ph" ${!f.photo?"checked":""} onchange="setPhoto(null)"></label>
+      ${d.album.map(p=>`<label class="pick ${f.photo===p.id?"on":""}"><img src="${srcOf(p.src)}" alt=""><input type="radio" name="ph" ${f.photo===p.id?"checked":""} onchange="setPhoto('${p.id}')" aria-label="Use this photo"></label>`).join("")}
+      <label class="pick upl">+ New<input type="file" accept="image/*" onchange="readDraft();uploadPhotos(this.files,ids=>{if(ids[0])S.draft.photo=ids[0];render()})" aria-label="Upload a new photo"></label>
+    </div>
+    ${ps?`<span class="eyebrow">Photo questions · tap one to use it</span>
+      <div class="prompts">${PROMPTS.map((p,i)=>`<button class="prompt" onclick="usePrompt(${i})">${esc(p.t)}</button>`).join("")}</div>
+      <button class="link" style="align-self:flex-start" onclick="openLib(S.draft.photo)">Browse all ${LIB.length} questions in the library</button>
+      <label class="toggle"><input type="checkbox" id="fz" ${f.zoom?"checked":""} onchange="readDraft();render()"><span>Mystery zoom<br><span class="hint">Start zoomed into one spot. The full photo shows after they answer.</span></span></label>
+      ${f.zoom?`<div class="zoomset"><div class="full" onclick="setFocus(event)"><img src="${ps}" alt="Tap to choose the zoom spot"><span class="dot" style="left:${f.fx}%;top:${f.fy}%"></span></div>
+        <div class="peek"><img src="${ps}" alt="What players see first" style="transform-origin:${f.fx}% ${f.fy}%"></div></div>
+        <p class="hint">Tap the photo to pick the spot. The small square is what players see first.</p>`:""}`:""}
+    <label>Question<textarea id="fq" placeholder="${ps?"Who took this photo?":"Who fell asleep on the trajinera in Xochimilco?"}">${esc(f.q)}</textarea></label>
+    <span class="eyebrow">The answer is…</span>
+    <div class="seg" role="group" aria-label="Answer type"><button class="${crew?"on":""}" onclick="setType('crew')">Someone in the crew</button><button class="${crew?"":"on"}" onclick="setType('custom')">Something else</button></div>
+    ${crew?`<label>Who?<input id="fa" value="${esc(f.a)}" list="crewe" placeholder="Their name" autocomplete="off"></label>${crewList(d,"crewe")}
+      <p class="hint">The other choices are filled in with names of the people playing${gl?" and your Partiful guests":""}, shuffled every game.</p>`
+     :`<label>Right answer<input id="fa" value="${esc(f.a)}" placeholder="${ps?"Arguing about which taco stand was better":"Chris, obviously"}"></label>
+      <label>Wrong answers<input id="fw0" value="${esc(f.wrong[0])}" placeholder="Wrong answer 1">
+      <input id="fw1" value="${esc(f.wrong[1])}" placeholder="Wrong answer 2 (optional)"><input id="fw2" value="${esc(f.wrong[2])}" placeholder="Wrong answer 3 (optional)"></label>`}
+    <label>The story (shown after answering)<textarea id="fs" placeholder="He slept through the mariachi boat pulling up next to us.">${esc(f.story)}</textarea></label>
+    ${S.err?`<p class="err">${esc(S.err)}</p>`:""}
+    <div class="row"><button class="btn coral" onclick="saveQ()">Save question</button>
+      ${S.qi>=0?`<button class="btn ghost" onclick="delQ()">Delete</button>`:""}</div>
+  </div>`;
+}
+function setPhoto(id){readDraft();S.draft.photo=id;render()}
+function saveQ(){
+  readDraft();const f=S.draft,q=f.q.trim(),a=f.a.trim(),wrong=f.wrong.map(s=>s.trim()).filter(Boolean),story=f.story.trim();
+  const crew=f.type==="crew";
+  if(!q||!a){S.err=crew?"Add a question and who the answer is.":"Add a question and its right answer.";render();return}
+  if(!crew&&!wrong.length){S.err="Add at least one wrong answer so there's something to pick between.";render();return}
+  const d=D(),item={q,a,wrong:crew?[]:wrong,story,photo:f.photo,type:f.type,zoom:!!(f.zoom&&f.photo),fx:f.fx,fy:f.fy,mature:!!f.mature};
+  if(S.qi>=0)d.questions[S.qi]=item;else d.questions.push(item);
+  save();toast("Question saved");go("deck");
+}
+function delQ(){D().questions.splice(S.qi,1);save();go("deck")}
+
+/* Partiful event */
+function eventScreen(){
+  const e=D().event||{url:"",guests:[]};
+  return `<button class="link" onclick="go('deck')">← ${esc(D().name)}</button>
+  <h2>Partiful event</h2>
+  <p class="muted">Partiful doesn't let other apps read events yet, so copy two things over by hand: the event link and the guest list.</p>
+  <div class="card partiful">
+    <label>Event link<input id="eurl" value="${esc(e.url)}" placeholder="https://partiful.com/e/…" inputmode="url"></label>
+    <label>Guest list<textarea id="eguests" placeholder="Paste names from the event's guest list, one per line" style="min-height:130px">${esc(e.guests.join("\n"))}</textarea></label>
+    ${S.err?`<p class="err">${esc(S.err)}</p>`:""}
+    <div class="row"><button class="btn coral" onclick="saveEvent()">Save event</button>
+      ${D().event?`<button class="btn ghost" onclick="D().event=null;save();go('deck')">Unlink</button>`:""}</div>
+  </div>`;
+}
+const NOISE=/^(going|maybe|can'?t go|invited|host|co-?host|cohost|\+\d+|\d+ (going|maybe|guests?)|guest list|see all|approved|pending)$/i;
+function saveEvent(){
+  let url=$("eurl").value.trim();const raw=$("eguests").value;
+  if(url&&!/^https?:\/\//i.test(url))url="https://"+url;
+  if(url&&!/^https:\/\/(www\.)?partiful\.com\//i.test(url.replace(/^http:/i,"https:"))){S.err="That doesn't look like a Partiful link. It should start with partiful.com/e/";render();return}
+  const guests=[...new Set(raw.split(/[\n,]+/).map(s=>s.replace(/[•·]/g,"").trim()).filter(s=>s&&s.length<=30&&!NOISE.test(s)))];
+  if(!url&&!guests.length){S.err="Add the event link, the guest list, or both.";render();return}
+  D().event={url:url.replace(/^http:/i,"https:"),guests};save();toast("Event linked");go("deck");
+}
+function inviteText(i){const d=decks[i];return `🎉 Game night: think you remember ${d.name}?\n\nI made an Inside Jokes trivia deck about it. Open Inside Jokes, tap “Import a friend's deck”, and paste this code:\n\n${exportDeck(i)}`}
+
+/* players */
+function setup(){
+  const d=D(),guests=(d.event?.guests||[]).filter(g=>!players.some(p=>p.name===g));
+  return `<button class="link" onclick="go('deck')">← ${esc(d.name)}</button>
+  <h2>Who's playing?</h2>
+  <p class="muted">Give everyone a title only your crew gets. It shows up on their turn.</p>
+  <div class="card">
+    <label>Name<input id="pname" placeholder="Chris" maxlength="20" onkeydown="if(event.key==='Enter')$('pnick').focus()"></label>
+    <label>Inside-joke title (optional)<input id="pnick" placeholder="Got us lost on the Metro, twice" maxlength="40" onkeydown="if(event.key==='Enter')addP()"></label>
+    ${S.k.cash?`<label>Venmo username (for the cash pot)<input id="pvenmo" placeholder="@chris-r" maxlength="40" autocapitalize="off" onkeydown="if(event.key==='Enter')addP()"></label>`:""}
+    <button class="btn" onclick="addP()">Add player</button>
+  </div>
+  ${guests.length?`<span class="eyebrow" style="color:var(--violet)">From the Partiful guest list · tap to add</span>
+    <div class="chips">${guests.map(g=>`<button class="chip add" onclick="quickAdd(${d.event.guests.indexOf(g)})">+ ${esc(g)}</button>`).join("")}</div>`:""}
+  <div class="chips">${players.map((p,i)=>`<span class="chip"><span>${esc(p.name)} ${starsOf(p.name)}${p.nick?`<small>${esc(p.nick)}</small>`:""}${S.k.cash&&p.venmo?`<small>Venmo @${esc(p.venmo)}</small>`:""}</span><button aria-label="Remove ${esc(p.name)}" onclick="rmP(${i})">×</button></span>`).join("")}</div>
+  ${stakesUI()}
+  ${S.err?`<p class="err">${esc(S.err)}</p>`:""}
+  <button class="btn coral block" onclick="start()">Shuffle and deal · ${d.questions.length} cards</button>`;
+}
+function stakesUI(){const k=S.k;
+  return `<span class="eyebrow">Play for</span><div class="stakes">
+  <div class="stake ${k.cash?"on":""}"><label class="toggle"><input type="checkbox" ${k.cash?"checked":""} onchange="setStake('cash',this.checked)">
+    <span class="title">Cash pot<br><span class="hint">Everyone else pays the winner on Venmo. The game shows who owes what; you send it yourselves.</span></span></label>
+    ${k.cash?`<label>Each player pays ($)<input id="k_amt" type="number" min="1" step="1" inputmode="decimal" value="${k.amount}" onchange="S.k.amount=Math.max(1,+this.value||1);saveK()"></label>`:""}</div>
+  <div class="stake ${k.photo?"on":""}"><label class="toggle"><input type="checkbox" ${k.photo?"checked":""} onchange="setStake('photo',this.checked)">
+    <span class="title">Loser's mystery photo<br><span class="hint">Someone secretly picks a photo. At the end it's revealed with the loser's name on it, plus a dare.</span></span></label>
+    ${k.photo?`${k.photoSrc?`<div class="hidden-photo"><div class="lock"><span>?</span></div><p style="flex:1">Locked in. Nobody sees it until the end.</p><button class="link" onclick="S.k.photoSrc=null;render()">Change</button></div>`
+      :`<button class="btn ghost upl">Choose the secret photo<input type="file" accept="image/*" onchange="hidePhoto(this.files[0])" aria-label="Choose the secret photo"></button><p class="hint">Turn the screen away from everyone first.</p>`}
+    <label>The dare<input id="k_dare" value="${esc(k.dare)}" placeholder="Make it your lock screen for 24 hours" maxlength="80" onchange="S.k.dare=this.value;saveK()"></label>`:""}</div>
+  <div class="stake ${k.secret?"on":""}"><label class="toggle"><input type="checkbox" ${k.secret?"checked":""} onchange="setStake('secret',this.checked)">
+    <span class="title">Winner's secret question<br><span class="hint">The winner asks the group one question. Everyone answers privately, and the answers are revealed with no names.</span></span></label></div>
+  </div><p class="hint">Every win adds a ★ to the winner's name. Bronze at 1, Silver at 3, Gold at 6, Legend at 10.</p>`}
+function setStake(key,v){S.k[key]=v;saveK();render()}
+function hidePhoto(f){if(!f)return;shrink(f).then(src=>{if(!src){toast("Couldn't read that photo. Try a JPG or PNG.");return}S.k.photoSrc=src;toast("Secret photo locked in");render()})}
+function addP(){const n=$("pname").value.trim(),k=$("pnick").value.trim(),v=($("pvenmo")?.value||"").trim().replace(/^@/,"").replace(/[^A-Za-z0-9_-]/g,"");
+  if(!n){S.err="Add a name first.";render();return}
+  const ex=players.find(p=>p.name===n);if(ex){ex.nick=k||ex.nick;ex.venmo=v||ex.venmo}else players.push({name:n,nick:k,venmo:v,wins:0,streak:0});
+  save();go("players",{err:""});setTimeout(()=>$("pname")&&$("pname").focus(),0)}
+function quickAdd(i){const n=D().event?.guests?.[i];if(!n)return;if(!players.some(p=>p.name===n))players.push({name:n,nick:"",venmo:"",wins:0,streak:0});save();go("players",{err:""})}
+function rmP(i){players.splice(i,1);save();go("players")}
+function start(){
+  if(S.photoShown){S.k.photoSrc=null;S.photoShown=false}
+  if(!players.length){go("players",{err:"Add at least one player."});return}
+  if(S.k.photo&&!S.k.photoSrc){go("players",{err:"Choose the secret photo for the loser, or turn off the mystery photo."});return}
+  if(players.length<2&&(S.k.cash||S.k.photo||S.k.secret)){go("players",{err:"Prizes need at least two players. Add someone or turn the prizes off."});return}
+  const d=D(),names=crewNames(d);
+  const qs=shuffle(d.questions).map(q=>{let opts;
+    if(q.type==="crew"){const others=shuffle(names.filter(n=>n.toLowerCase()!==q.a.trim().toLowerCase())).slice(0,3);
+      opts=shuffle([q.a,...(others.length?others:["Someone else"])])}
+    else opts=shuffle([q.a,...q.wrong]);
+    return {...q,src:photoSrc(d,q.photo),opts}});
+  qs.forEach(q=>q.src&&paletteOf(q.src));
+  S.g={qs,i:0,scores:Object.fromEntries(players.map(p=>[p.name,0])),streak:Object.fromEntries(players.map(p=>[p.name,0])),picked:null,dealt:false,revealed:false};
+  go("turn");
+}
+const cur=()=>players[S.g.i%players.length];
+
+function turn(){
+  const p=cur(),left=S.g.qs.length-S.g.i;
+  return `<div class="panel turn pop"><span class="eyebrow">Card ${S.g.i+1} of ${S.g.qs.length}</span>
+    <div class="who">${esc(p.name)}</div>${p.wins?`<p>${starsOf(p.name)} <span class="tier">${tierOf(p.wins)}</span></p>`:""}${p.nick?`<p class="nick">“${esc(p.nick)}”</p>`:""}
+    <div class="pile">${left>2?'<div class="cback"><b>IJ</b></div>':"<div></div>"}${left>1?'<div class="cback"><b>IJ</b></div>':"<div></div>"}<div class="cback" id="top"><b>IJ</b></div></div>
+    <p class="muted">Your turn. Everyone else, eyes off the screen.</p>
+    <button class="btn coral" onclick="draw()">Draw a card</button></div>`;
+}
+function draw(){const t=$("top");S.g.dealt=false;if(reduce||!t){go("play");return}t.classList.add("draw");setTimeout(()=>go("play"),480)}
+function play(){
+  const g=S.g,q=g.qs[g.i],p=g.picked,done=p!==null,ok=done&&q.opts[p]===q.a,me=cur();
+  const deal=!g.dealt;g.dealt=true;
+  return `<div class="panel" style="gap:10px"><div class="qhead"><span class="eyebrow">${esc(me.name)} · ${g.i+1}/${g.qs.length}</span>
+    <span class="eyebrow" style="color:var(--ink)">${g.scores[me.name]} pts</span></div>
+    <div class="progress"><i style="width:${(g.i/g.qs.length)*100}%"></i></div></div>
+  <div class="pcard ${deal?"deal":""}"><div class="inner">
+    <div class="face front">${q.src?`<div class="photoWrap"><img id="cardimg" class="${q.zoom&&!g.revealed?"zoom":""}" src="${q.src}" alt="" style="transform-origin:${q.fx??50}% ${q.fy??50}%"></div>`:""}
+      <div class="qtext">${q.type==="crew"||(q.zoom&&q.src)||q.mature?`<span class="kind ${q.mature?"m":""}">${[q.mature?"18+":"",q.type==="crew"?"Crew pick":"",q.zoom&&q.src?"Mystery zoom":""].filter(Boolean).join(" · ")}</span>`:""}
+        <div class="question">${esc(q.q)}</div></div></div>
+    <div class="face back cback"><b>IJ</b></div>
+  </div></div>
+  <div class="answers">${q.opts.map((o,i)=>{
+    let c="";if(done){c=o===q.a?"right":(i===p?"wrong":"dim")}
+    return `<button class="ans ${c}" ${done?"disabled":""} onclick="pick(${i})"><span class="k">${"ABCD"[i]}</span><span>${esc(o)}</span></button>`}).join("")}</div>
+  ${done?`<div class="verdict ${ok?"good":"bad"} pop"><b>${ok?(g.streak[me.name]>=3?"On fire! +150":"Nailed it! +100"):"Nope."}</b>
+    ${ok?"":`<p>It was <strong>${esc(q.a)}</strong>.</p>`}
+    ${q.story?`<p class="story"><em>The story</em>${esc(q.story)}</p>`:""}</div>
+    <button class="btn block" onclick="next()">${g.i+1<g.qs.length?"Next player":"See who won"}</button>`:""}`;
+}
+function pick(i){const g=S.g,q=g.qs[g.i],p=cur().name;g.picked=i;
+  if(q.opts[i]===q.a){g.streak[p]++;g.scores[p]+=g.streak[p]>=3?150:100}else g.streak[p]=0;render();
+  if(q.zoom&&!g.revealed){g.revealed=true;requestAnimationFrame(()=>requestAnimationFrame(()=>{const im=$("cardimg");im&&im.classList.remove("zoom")}))}}
+function next(){const g=S.g;g.i++;g.picked=null;g.revealed=false;if(g.i>=g.qs.length)finish();go(g.i<g.qs.length?"turn":"end")}
+function finish(){
+  const rows=Object.entries(S.g.scores).sort((a,b)=>b[1]-a[1]),top=rows[0][1],bottom=rows[rows.length-1][1];
+  const winners=rows.filter(r=>r[1]===top).map(r=>r[0]);
+  const lows=rows.filter(r=>r[1]===bottom).map(r=>r[0]).filter(n=>!winners.includes(n));
+  const loser=lows.length?lows[Math.floor(Math.random()*lows.length)]:null;
+  players.forEach(p=>{if(!(p.name in S.g.scores))return;if(winners.includes(p.name)){p.wins=(p.wins||0)+1;p.streak=(p.streak||0)+1}else p.streak=0});
+  save();
+  S.g.result={rows,top,winners,loser,lowTie:lows.length>1,asker:winners[Math.floor(Math.random()*winners.length)]};
+  S.photoShown=false;S.sq=null;
+}
+
+function end(){
+  const r=S.g.result,{rows,top,winners,loser}=r,k=S.k,multi=players.length>1;
+  const nick=n=>P(n)?.nick||"";
+  const payers=rows.map(x=>x[0]).filter(n=>!winners.includes(n));
+  const each=(k.amount/winners.length);
+  const money=v=>"$"+(Number.isInteger(v)?v:v.toFixed(2));
+  return `<div class="panel winner pop"><span class="eyebrow">${winners.length>1?"It's a tie":"Knows the crew best"}</span>
+    <div class="who">${esc(winners.join(" & "))}</div><p class="muted">${top} points · ${esc(D().name)}</p>
+    <p>${winners.map(w=>`<span class="stars">★ ${P(w)?.wins||1}</span> <span class="tier">${esc(w)} · ${tierOf(P(w)?.wins||1)}</span>${(P(w)?.streak||0)>1?` <span class="hint">${P(w).streak} in a row</span>`:""}`).join("<br>")}</p></div>
+  <div class="scores">${rows.map((x,i)=>`<div class="score ${x[1]===top?"first":""}"><span class="pl">${i+1}</span><span class="nm">${esc(x[0])} ${starsOf(x[0])}${nick(x[0])?`<small>${esc(nick(x[0]))}</small>`:""}</span><span class="pt">${x[1]}</span></div>`).join("")}</div>
+
+  ${k.cash&&multi&&payers.length?`<div class="panel reward"><span class="eyebrow">Cash pot</span>
+    <p class="owe">${esc(payers.join(", "))} each owe ${winners.length>1?"each winner":esc(winners[0])} <b>${money(each)}</b></p>
+    ${winners.map((w,i)=>{const h=P(w)?.venmo;return h
+      ?`<a class="btn coral" href="https://venmo.com/u/${encodeURIComponent(h)}" target="_blank" rel="noopener">Open @${esc(h)} on Venmo</a>`
+      :`<div class="row" style="flex-wrap:nowrap"><input id="vm_${i}" placeholder="${esc(w)}'s Venmo username" autocapitalize="off"><button class="btn small" onclick="setVenmo(${i})">Save</button></div>`}).join("")}
+    <p class="hint">Put “Inside Jokes: ${esc(D().name)}” in the note. Venmo opens outside the game, and nobody pays until they send it themselves.</p></div>`:""}
+
+  ${k.photo&&loser&&k.photoSrc?`<div class="panel reward"><span class="eyebrow">Loser's mystery photo</span>
+    ${S.photoShown?`<div class="pcard deal"><div class="inner"><div class="face front"><div class="photoWrap"><img src="${k.photoSrc}" alt="The mystery photo"></div>
+        <div class="qtext"><span class="kind">${r.lowTie?"Tied for last · fate picked":"Dead last"}</span><div class="question">${esc(loser)}, this one's yours.</div>
+        <div class="dare">${esc(k.dare||"Make it your lock screen for 24 hours")}</div></div></div><div class="face back cback"><b>IJ</b></div></div></div>`
+     :`<div class="hidden-photo"><div class="lock"><span>?</span></div><p style="flex:1"><strong>${esc(loser)}</strong> came in last${r.lowTie?" (fate broke the tie)":""}. Ready?</p></div>
+       <button class="btn coral" onclick="S.photoShown=true;render()">Reveal the photo</button>`}</div>`:""}
+
+  ${k.secret&&multi?`<div class="panel reward"><span class="eyebrow">Winner's secret question</span>
+    ${S.sq?.stage==="done"?`<p>The answers are in.</p><button class="btn ghost" onclick="go('secret')">See the answers again</button>`
+     :`<p><strong>${esc(r.asker)}</strong> asks the group one question. Everyone else answers privately on this phone.</p>
+       <button class="btn coral" onclick="startSecret()">${esc(r.asker)}, ask your question</button>`}</div>`:""}
+
+  <div class="row"><button class="btn coral" onclick="start()">Rematch</button><button class="btn ghost" onclick="go('deck')">Back to deck</button></div>`;
+}
+function setVenmo(i){const el=$("vm_"+i),v=(el?.value||"").trim().replace(/^@/,"").replace(/[^A-Za-z0-9_-]/g,"");if(!v)return;const p=P(S.g.result.winners[i]);if(p){p.venmo=v;save()}render()}
+
+/* secret question: pass the phone around */
+function startSecret(){const asker=S.g.result.asker;
+  S.sq={asker,q:"",order:shuffle(players.map(p=>p.name).filter(n=>n!==asker&&n in S.g.scores)),idx:0,answers:[],stage:"ask",shown:0};go("secret")}
+function secret(){
+  const s=S.sq;if(!s)return end();
+  if(s.stage==="ask") return `<div class="panel turn pop"><span class="eyebrow">Secret question</span>
+    <p class="muted">Pass the phone to</p><div class="who">${esc(s.asker)}</div>
+    <label style="width:100%;text-align:left">Your question for the group<textarea id="sq_q" placeholder="What's something you never told the group about this trip?" maxlength="200"></textarea></label>
+    ${S.err?`<p class="err">${esc(S.err)}</p>`:""}
+    <button class="btn coral" onclick="lockQ()">Lock it in</button>
+    <p class="hint">Your name won't appear next to the question.</p></div>`;
+  if(s.stage==="pass") return `<div class="panel turn pop"><span class="eyebrow">Answer ${s.idx+1} of ${s.order.length}</span>
+    <p class="muted">Pass the phone to</p><div class="who">${esc(s.order[s.idx])}</div>
+    <p class="muted">Everyone else, look away. Answers are revealed with no names.</p>
+    <button class="btn coral" onclick="S.sq.stage='write';S.err='';render()">I'm ${esc(s.order[s.idx])}</button></div>`;
+  if(s.stage==="write") return `<div class="panel"><span class="eyebrow">The question</span>
+    <div class="question">${esc(s.q)}</div>
+    <label>Your answer<textarea id="sq_a" placeholder="Type it. Nobody will know it was you." maxlength="300"></textarea></label>
+    ${S.err?`<p class="err">${esc(S.err)}</p>`:""}
+    <button class="btn coral" onclick="submitA()">Submit and hide</button></div>`;
+  const all=s.answers.length;
+  return `<div class="panel"><span class="eyebrow">The group answered</span><div class="question">${esc(s.q)}</div></div>
+  <div class="answerlist">${s.answers.slice(0,s.shown).map((a,i)=>`<div class="anon pop"><small>Anonymous ${i+1}</small>${esc(a)}</div>`).join("")}</div>
+  ${s.shown<all?`<button class="btn coral block" onclick="S.sq.shown++;render()">Reveal ${s.shown?"the next one":"the first answer"} · ${all-s.shown} left</button>`
+   :`<button class="btn block" onclick="S.sq.stage='done';go('end')">Back to results</button>`}`;
+}
+function lockQ(){const v=$("sq_q").value.trim();if(!v){S.err="Write a question first.";render();return}S.err="";S.sq.q=v;S.sq.stage=S.sq.order.length?"pass":"reveal";render()}
+function submitA(){const v=$("sq_a").value.trim();if(!v){S.err="Type an answer. It stays anonymous.";render();return}
+  S.err="";const s=S.sq;s.answers.push(v);s.idx++;
+  if(s.idx<s.order.length)s.stage="pass";else{s.answers=shuffle(s.answers);s.stage="reveal";s.shown=0}
+  render();window.scrollTo(0,0)}
+
+/* sharing */
+function exportDeck(i){const d=decks[i];return "IJ1:"+btoa(unescape(encodeURIComponent(JSON.stringify({name:d.name,questions:d.questions.map(({q,a,wrong,story,type,mature})=>({q,a,wrong,story,type,mature}))}))))}
+function share(){
+  if(!S.importing) return `<button class="link" onclick="go('deck')">← ${esc(D().name)}</button>
+    <h2>${S.invite?"Invite the guests":"Share this deck"}</h2>
+    <p class="muted">${S.invite?"Copy this message and post it in the Partiful event chat or your group text.":"Copy this code and text it to your friends. They tap “Import a friend's deck” and paste it."} Photos stay on your phone and aren't included.</p>
+    <div class="card"><div class="code" id="code">${esc(S.shareText)}</div><button class="btn" onclick="copyCode()">Copy ${S.invite?"message":"code"}</button></div>`;
+  return `<button class="link" onclick="go('home')">← All decks</button>
+    <h2>Import a deck</h2><p class="muted">Paste the code or the whole message a friend sent you.</p>
+    <div class="card"><textarea id="imp" placeholder="IJ1:…">${esc(S.shareText)}</textarea>
+    ${S.err?`<p class="err">${esc(S.err)}</p>`:""}<button class="btn coral" onclick="doImport()">Import deck</button></div>`;
+}
+function copyCode(){const t=S.shareText,fb=()=>{const r=document.createRange();r.selectNodeContents($("code"));const s=getSelection();s.removeAllRanges();s.addRange(r);toast("Selected. Copy it from the menu.")};
+  try{navigator.clipboard.writeText(t).then(()=>toast("Copied"),fb)}catch(e){fb()}}
+function doImport(){const t=$("imp").value.trim(),m=t.match(/IJ1:[A-Za-z0-9+/=]+/);
+  try{if(!m)throw 0;const d=JSON.parse(decodeURIComponent(escape(atob(m[0].slice(4)))));
+    if(!d.name||!Array.isArray(d.questions))throw 0;
+    decks.push({id:"d"+Date.now(),name:d.name,color:decks.length,album:[],event:null,questions:d.questions.filter(q=>q&&q.q&&q.a&&Array.isArray(q.wrong)).map(q=>({...q,photo:null}))});
+    save();toast("Deck imported");S.di=decks.length-1;go("deck",{renaming:false});
+  }catch(e){go("share",{importing:true,shareText:t,err:"That code didn't work. Make sure you pasted the whole thing, including the part starting with IJ1:"})}}
+
+render();
+if("serviceWorker" in navigator&&location.protocol==="https:"){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+</script>
+</body>
+</html>
