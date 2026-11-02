@@ -29,6 +29,8 @@ public class MainActivity extends ComponentActivity {
 
     private WebView web;
     private ValueCallback<Uri[]> fileCallback;
+    private String pendingShare;
+    private boolean pageReady;
 
     private final ActivityResultLauncher<Intent> photoPicker = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -87,6 +89,12 @@ public class MainActivity extends ComponentActivity {
             }
 
             @Override
+            public void onPageFinished(WebView view, String url) {
+                pageReady = url != null && url.endsWith("/index.html");
+                deliverShare();
+            }
+
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri url = request.getUrl();
                 if (HOST.equals(url.getHost())) return false;
@@ -124,20 +132,49 @@ public class MainActivity extends ComponentActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (web.canGoBack()) {
-                    web.goBack();
-                } else {
-                    setEnabled(false);
-                    getOnBackPressedDispatcher().onBackPressed();
-                }
+                // Ask the game to step back a screen; only leave the app from the home screen.
+                web.evaluateJavascript("(window.ijBack && window.ijBack()) ? 'yes' : 'no'", handled -> {
+                    if ("\"yes\"".equals(handled)) return;
+                    if (web.canGoBack()) {
+                        web.goBack();
+                    } else {
+                        setEnabled(false);
+                        getOnBackPressedDispatcher().onBackPressed();
+                        setEnabled(true);
+                    }
+                });
             }
         });
+
+        readShare(getIntent());
 
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
         } else {
             web.loadUrl(START);
         }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        readShare(intent);
+        deliverShare();
+    }
+
+    private void readShare(Intent intent) {
+        if (intent != null && Intent.ACTION_SEND.equals(intent.getAction())) {
+            String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+            if (text != null) pendingShare = text;
+        }
+    }
+
+    private void deliverShare() {
+        if (pendingShare == null || !pageReady || web == null) return;
+        String js = "window.ijShared && window.ijShared(" + org.json.JSONObject.quote(pendingShare) + ")";
+        pendingShare = null;
+        web.evaluateJavascript(js, null);
     }
 
     @Override

@@ -47,12 +47,13 @@ jobs:
       - name: Build
         working-directory: android
         run: |
-          if [ -n "$KEYSTORE_FILE" ]; then gradle --no-daemon assembleDebug bundleRelease; else gradle --no-daemon assembleDebug; fi
+          if [ -n "$KEYSTORE_FILE" ]; then gradle --no-daemon assembleRelease bundleRelease; else gradle --no-daemon assembleDebug; fi
 
       - name: Collect files
         run: |
           mkdir -p out
-          cp android/app/build/outputs/apk/debug/app-debug.apk out/inside-jokes-test.apk
+          # The test app is signed with your own key, so new builds install over the old one.
+          if [ -f android/app/build/outputs/apk/release/app-release.apk ]; then cp android/app/build/outputs/apk/release/app-release.apk out/inside-jokes-test.apk; else cp android/app/build/outputs/apk/debug/app-debug.apk out/inside-jokes-test.apk; fi
           if [ -f android/app/build/outputs/bundle/release/app-release.aab ]; then cp android/app/build/outputs/bundle/release/app-release.aab out/inside-jokes-play-store.aab; fi
           ls -la out
 
