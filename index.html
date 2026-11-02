@@ -86,7 +86,7 @@ a.link{display:inline-block}
 .card,.panel{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px}
 .panel{box-shadow:0 12px 40px rgba(20,10,40,.18)}
 label{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;flex-direction:column;gap:6px}
-input,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:12px;width:100%;box-sizing:border-box;text-transform:none;letter-spacing:0;font-weight:500}
+input,textarea,select{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:12px;width:100%;box-sizing:border-box;text-transform:none;letter-spacing:0;font-weight:500}
 textarea{resize:vertical;min-height:70px}
 .qitem{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1.5px solid var(--line)}
 .qitem:first-child{border-top:0}
@@ -231,7 +231,7 @@ button.pick{padding:0}
 body.pc #postcard{opacity:1}
 .hero.onphoto{min-height:min(46vh,380px);justify-content:flex-end;color:var(--on-photo);text-shadow:0 2px 18px rgba(0,0,0,.45)}
 .hero.onphoto h1 span{color:var(--photo-accent)}
-.where{align-self:flex-start;background:rgba(12,8,24,.55);color:var(--on-photo);border-radius:999px;padding:8px 14px;font-weight:800;font-size:13px;letter-spacing:.04em;text-shadow:none;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.where{text-decoration:none;align-self:flex-start;background:rgba(12,8,24,.55);color:var(--on-photo);border-radius:999px;padding:8px 14px;font-weight:800;font-size:13px;letter-spacing:.04em;text-shadow:none;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .where em{font-style:normal;opacity:.75;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:11px;margin-right:6px}
 .sug{display:flex;flex-direction:column;border:2px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
 .sug:empty{display:none}
@@ -250,6 +250,8 @@ body.pc #postcard{opacity:1}
 .asme span{flex:1;min-width:0;font-weight:700;overflow-wrap:anywhere}
 .qrow small{display:block;font-size:12px;font-weight:700;color:var(--violet);margin-top:4px;text-transform:none;letter-spacing:0}
 .steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.chip button.hostb{width:auto;height:26px;border-radius:999px;padding:0 10px;font-size:12px;font-weight:800}
+.chip button.hostb.on{background:var(--marigold);color:var(--on-accent)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;font-size:14px;z-index:20;max-width:90vw;text-align:center}
 .err{color:var(--bad);font-weight:700;font-size:14px}
 .pop{animation:pop .35s ease}
@@ -338,7 +340,8 @@ function postcardArt(label){
       x+=w+r()*6}});
   return pcCache[label]=cv.toDataURL("image/jpeg",.82);
 }
-const latestTrip=()=>decks.filter(d=>d.place).sort((a,b)=>(b.placeAt||0)-(a.placeAt||0))[0];
+const tripAt=d=>Math.max(d.placeAt||0,d.eventAt||0);
+const latestTrip=()=>decks.filter(d=>d.place||d.event?.image).sort((a,b)=>tripAt(b)-tripAt(a))[0];
 const srcOf=p=>!p?null:(p.startsWith("sample:")?sampleArt(+p.slice(7)):p);
 
 /* ---------- palette from a photo ---------- */
@@ -384,7 +387,7 @@ const PROMPTS=[
  {t:"Where was this taken?",crew:0}
 ];
 /* question library: [category, question, answer is a crew member, mystery zoom] */
-const LIB_CATS=["Classic","Food","Night out","Story","Mature"];
+const LIB_CATS=["Classic", "Food", "Night out", "Travel", "Roast", "Most likely", "Mature"];
 const LIB=[
  ["Classic","Who took this photo?",1],
  ["Classic","Whose idea was this?",1],
@@ -394,7 +397,18 @@ const LIB=[
  ["Classic","Who complained the most on this day?",1],
  ["Classic","Who got lost on the way here?",1],
  ["Classic","Whose head is this?",1,1],
- ["Classic","Who has this exact photo saved as a favorite?",1],
+ ["Classic","Who has this saved as a favorite?",1],
+ ["Classic","Who planned this part of the trip?",1],
+ ["Classic","Who was secretly not having fun here?",1],
+ ["Classic","Who took way too long picking an outfit for this?",1],
+ ["Classic","Who was the group photographer this day?",1],
+ ["Classic","Who's about to say “one more photo”?",1],
+ ["Classic","Who would rate this moment 11/10?",1],
+ ["Classic","Who almost didn't come to this?",1],
+ ["Classic","Who knows exactly what happened two minutes after this?",1],
+ ["Classic","Who's most likely to frame this photo?",1],
+ ["Classic","Whose hand is this?",1,1],
+ ["Classic","Who said “this is the best day of the trip” right here?",1],
  ["Food","Whose plate is this?",1],
  ["Food","Who ordered this?",1,1],
  ["Food","Who said “I'm not that hungry” and then finished all of this?",1],
@@ -402,18 +416,80 @@ const LIB=[
  ["Food","Who still owes money for this meal?",1],
  ["Food","Who was way too confident about the hot sauce here?",1],
  ["Food","Who would give this place 10/10 no matter what?",1],
+ ["Food","Who stole a bite of someone else's food here?",1],
+ ["Food","Who ordered the safest thing on the menu?",1],
+ ["Food","Who asked the waiter for a recommendation and ignored it?",1],
+ ["Food","Who was hangry right before this?",1],
+ ["Food","Who tried to split this bill down to the cent?",1],
+ ["Food","Who would eat this again for breakfast?",1],
+ ["Food","Who regretted this meal later that night?",1],
+ ["Food","Who found this restaurant?",1],
+ ["Food","Who had the worst food envy here?",1],
+ ["Food","Who ordered dessert for the table without asking?",1],
+ ["Food","Who got food on their shirt here?",1],
  ["Night out","Who said “just one more” right after this?",1],
  ["Night out","Who disappeared within an hour of this photo?",1],
  ["Night out","Who lost something this night?",1],
- ["Night out","Who was the self-appointed DJ here?",1],
- ["Night out","Who was the first to want to go home?",1],
+ ["Night out","Who was the self-appointed DJ?",1],
+ ["Night out","Who wanted to go home first?",1],
  ["Night out","Who made friends with a total stranger this night?",1],
- ["Story","What happened five minutes after this?",0],
- ["Story","What was everyone arguing about here?",0],
- ["Story","What song was playing right now?",0],
- ["Story","Where was this taken?",0],
- ["Story","Zoomed in: what is this?",0,1],
- ["Story","What time do you think it was?",0],
+ ["Night out","Who ordered a round nobody asked for?",1],
+ ["Night out","Who danced like nobody was watching (everyone was)?",1],
+ ["Night out","Who led the group to the wrong place?",1],
+ ["Night out","Who talked our way into this place?",1],
+ ["Night out","Who started the singalong?",1],
+ ["Night out","Who was the designated parent of the group?",1],
+ ["Night out","Who said “I'm not going out tonight” and then did?",1],
+ ["Night out","Who kept checking the time?",1],
+ ["Night out","Who ordered food at 3am after this?",1],
+ ["Night out","Who gave a speech nobody asked for?",1],
+ ["Travel","Who overpacked for this trip?",1],
+ ["Travel","Who almost missed the flight?",1],
+ ["Travel","Who tried speaking the language the most?",1],
+ ["Travel","Who got sunburned first?",1],
+ ["Travel","Who bought the weirdest souvenir?",1],
+ ["Travel","Who slept through something important?",1],
+ ["Travel","Who had the most screen time on Google Maps?",1],
+ ["Travel","Who was the unofficial tour guide?",1],
+ ["Travel","Who got scammed (just a little)?",1],
+ ["Travel","Who wants to move here after this trip?",1],
+ ["Travel","Who spent the most money?",1],
+ ["Travel","Who complained about the hotel?",1],
+ ["Travel","Who took a nap instead of doing this?",1],
+ ["Travel","Who got sick of everyone first?",1],
+ ["Travel","Who brought the charger that saved everyone?",1],
+ ["Travel","Who said “we're almost there” the most?",1],
+ ["Travel","Who did the least planning and had the most fun?",1],
+ ["Roast","Who's the main character in this photo?",1],
+ ["Roast","Who's pretending to have fun here?",1],
+ ["Roast","Who's about to ruin the next photo?",1],
+ ["Roast","Whose face here is going in the group chat forever?",1],
+ ["Roast","Who thinks they look better in this than they do?",1],
+ ["Roast","Who's posing like it's a magazine cover?",1],
+ ["Roast","Who's not looking at the camera because they're on their phone?",1],
+ ["Roast","Who would get voted off the trip first?",1],
+ ["Roast","Who's the reason we were late to this?",1],
+ ["Roast","Who has the worst sunglasses here?",1],
+ ["Roast","Who's acting cool but was terrified?",1],
+ ["Roast","Who's about to tell a story nobody asked for?",1],
+ ["Roast","Who blinked in every other photo from this day?",1],
+ ["Roast","Who should never be in charge of planning again?",1],
+ ["Roast","Who's taking this way too seriously?",1],
+ ["Roast","Who looks like they're filming a music video?",1],
+ ["Most likely","Who's most likely to come back here alone?",1],
+ ["Most likely","Who's most likely to get married here?",1],
+ ["Most likely","Who's most likely to start a business after this trip?",1],
+ ["Most likely","Who's most likely to lose their passport?",1],
+ ["Most likely","Who's most likely to cry at this place?",1],
+ ["Most likely","Who's most likely to fight a pigeon here?",1],
+ ["Most likely","Who's most likely to befriend a stray dog here?",1],
+ ["Most likely","Who's most likely to turn this into a TikTok?",1],
+ ["Most likely","Who's most likely to remember this wrong?",1],
+ ["Most likely","Who's most likely to exaggerate this story?",1],
+ ["Most likely","Who's most likely to quit their job after this trip?",1],
+ ["Most likely","Who's most likely to get a tattoo to remember this?",1],
+ ["Most likely","Who's most likely to get a local's phone number here?",1],
+ ["Most likely","Who's most likely to plan the next trip?",1],
  ["Mature","Who was the drunkest when this was taken?",1],
  ["Mature","Who threw up within three hours of this photo?",1],
  ["Mature","Who had the worst hangover the morning after this?",1],
@@ -425,7 +501,15 @@ const LIB=[
  ["Mature","Who's most likely to get kicked out of this place?",1],
  ["Mature","Who smelled the worst at this point of the trip?",1],
  ["Mature","Who cried at some point this night?",1],
- ["Mature","Who's hiding a way worse photo from this exact moment?",1]
+ ["Mature","Who's hiding a way worse photo from this exact moment?",1],
+ ["Mature","Who had a little too much tequila here?",1],
+ ["Mature","Who drunk-texted an ex this night?",1],
+ ["Mature","Who woke up somewhere unexpected after this?",1],
+ ["Mature","Who said “I'm never drinking again” the next morning?",1],
+ ["Mature","Who spent the most on drinks here?",1],
+ ["Mature","Who would get the group arrested?",1],
+ ["Mature","Who made the worst decision of the trip right after this?",1],
+ ["Mature","Who would deny this photo exists?",1]
 ].map(([cat,t,crew,zoom])=>({cat,t,crew:!!crew,zoom:!!zoom}));
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
@@ -435,13 +519,17 @@ decks.forEach(d=>{d.album=d.album||[];d.event=d.event||null;
   if(d.id==="sample-cdmx"&&d.place===undefined){d.place=CDMX;d.placeAt=1}
   if(d.id==="sample-cdmx"&&!d.v2){if(!d.questions.some(q=>q.zoom))d.questions.push({...ZOOM_SAMPLE});d.v2=1}});
 function crewNames(d){const seen=new Set(),out=[];
-  [...players.map(p=>p.name),...(d.event?.guests||[]),...d.questions.filter(q=>q.type==="crew").map(q=>q.a)].forEach(n=>{n=(n||"").trim();const k=n.toLowerCase();if(n&&!seen.has(k)){seen.add(k);out.push(n)}});
+  [...players.map(p=>p.name),...d.album.map(p=>p.by).filter(Boolean),...(d.event?.guests||[]),...d.questions.filter(q=>q.type==="crew").map(q=>q.a)].forEach(n=>{n=(n||"").trim();const k=n.toLowerCase();if(n&&!seen.has(k)){seen.add(k);out.push(n)}});
   return out}
+function personSelect(id,d,val){val=val||"";const names=crewNames(d),lv=val.toLowerCase(),inList=!val||names.some(n=>n.toLowerCase()===lv),other=!inList||!names.length;
+  return `<select id="${id}" onchange="document.getElementById('${id}_o').hidden=this.value!=='__o'"><option value="">Pick someone</option>${names.map(n=>`<option ${n.toLowerCase()===lv?"selected":""}>${esc(n)}</option>`).join("")}<option value="__o" ${other?"selected":""}>Someone else…</option></select><input id="${id}_o" placeholder="Their name" maxlength="30" autocomplete="off" value="${inList?"":esc(val)}" ${other?"":"hidden"}>`}
+function personVal(id){const el=$(id);if(!el)return "";if(el.tagName==="SELECT")return el.value==="__o"?(($(id+"_o")||{}).value||"").trim():el.value.trim();return el.value.trim()}
 const crewList=(d,id)=>`<datalist id="${id}">${crewNames(d).map(n=>`<option value="${esc(n)}">`).join("")}</datalist>`;
 let players=(store.get("ij_players",[])).map(p=>typeof p==="string"?{name:p,nick:""}:p);
 let S={screen:"home",k:{cash:false,amount:5,photo:false,photoSrc:null,dare:"",secret:false,...store.get("ij_stakes",{}),photoSrc:null}};
 S.mature=store.get("ij_mature",false);
 S.uploader=store.get("ij_uploader",null);
+S.host=store.get("ij_host",null);
 let MODELS=store.get("ij_models",{});
 /* Google Play build: no real-money pot */
 const STORE_BUILD=/InsideJokesAndroid/.test(navigator.userAgent);
@@ -480,7 +568,7 @@ window.ijBack=function(){
   if(sc==="library"&&S.libPicking&&S.libPhoto){S.libPicking=false;render();return true}
   if(sc==="turn"||sc==="play"){S.leaveAsk=true;render();return true}
   if(sc==="secret"){go("end");return true}
-  if(sc==="quick"){go("album");return true}
+  if(sc==="quick"||sc==="tagnew"){go("album");return true}
   if(sc==="share"&&S.importing){go("home");return true}
   go("deck");return true;
 };
@@ -493,11 +581,11 @@ function render(){
   document.body.classList.toggle("playing",playing);
   const L=S.screen==="home"&&latestTrip(),pc=$("postcard");
   document.body.classList.toggle("pc",!!L);
-  if(L)pc.style.backgroundImage=`url(${postcardArt(L.place.label)})`;
+  if(L)pc.style.backgroundImage=`url(${L.event?.image||postcardArt(L.place.label)})`;
   if(S.screen==="play"){const q=S.g.qs[S.g.i];setVibe(q.src||coverOf(D()))}
   else if(S.di!=null&&D()&&S.screen!=="home")setVibe(coverOf(D()));
   else setVibe(null);
-  $("app").innerHTML={home,deck,edit,album,quick,library,players:setup,turn,play,end,secret,share,event:eventScreen}[S.screen]()+sheets();
+  $("app").innerHTML={home,deck,edit,album,quick,library,tagnew,players:setup,turn,play,end,secret,share,event:eventScreen}[S.screen]()+sheets();
 }
 
 /* ---------- screens ---------- */
@@ -507,7 +595,7 @@ function home(){
     <div class="stripes"><i></i><i></i><i></i><i></i></div>
     <h1>Inside <span>Jokes</span></h1>
     <p class="tag">Trivia about your trips, your crew, and the stuff only you were there for.</p>
-    ${L?`<button class="where" onclick="openDeck(${decks.indexOf(L)})"><em>Latest trip</em>${esc(L.place.label)}</button>`:""}
+    ${L?`<div class="row"><button class="where" onclick="openDeck(${decks.indexOf(L)})"><em>Latest trip</em>${esc(L.event?.title||L.place?.label||L.name)}</button>${L.event?.url?`<a class="where" href="${esc(L.event.url)}" target="_blank" rel="noopener">Open on Partiful</a>`:""}</div>`:""}
   </header>
   <div class="row between ${L?"onpc":""}"><span class="eyebrow">Your decks</span>
     <button class="link" onclick="go('share',{importing:true,shareText:'',err:''})">Import a friend's deck</button></div>
@@ -525,14 +613,29 @@ function home(){
 function newDeck(){decks.push({id:"d"+Date.now(),name:"New trip",color:decks.length,album:[],event:null,place:null,questions:[]});save();S.di=decks.length-1;
   go("deck",{renaming:true,pd:null,sugList:[]});setTimeout(()=>$("dplace")&&$("dplace").focus(),0)}
 function openDeck(i){S.di=i;
-  if(S.pendingEvent){const u=S.pendingEvent;S.pendingEvent=null;go("event",{renaming:false,pd:null,err:"",evDraft:u});return}
+  if(S.pendingEvent){const u=S.pendingEvent;S.pendingEvent=null;linkEvent(u);return}
   go("deck",{renaming:false,pd:null})}
+function pickPartiful(){S.awaitPartiful=true;
+  if(window.IJNative&&IJNative.openPartiful){IJNative.openPartiful();return}
+  const a=document.createElement("a");a.href="https://partiful.com/";a.target="_blank";a.rel="noopener";a.click()}
+/* coming back from Partiful after tapping Copy link */
+window.ijClipboard=function(text){if(S.screen==="event"&&S.awaitPartiful){S.awaitPartiful=false;window.ijShared(text)}};
+/* the event's cover photo and name, fetched by the Android app */
+window.ijEventMeta=function(o){const hits=decks.filter(d=>d.event&&d.event.url===o.url);if(!hits.length)return;
+  if(!o.image){if(o.title){hits.forEach(d=>d.event.title=o.title);save();render()}toast("Couldn't get the event photo, so the trip picture stays.");return}
+  const im=new Image();im.onload=()=>{try{const m=1200,sc=Math.min(1,m/Math.max(im.width,im.height)),cv=document.createElement("canvas");cv.width=im.width*sc|0;cv.height=im.height*sc|0;
+    cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);const src=cv.toDataURL("image/jpeg",.8);
+    hits.forEach(d=>{d.event.image=src;if(o.title)d.event.title=o.title;d.eventAt=Date.now()});save();toast("Got the event photo");render()}catch(e){}};im.src=o.image};
+function linkEvent(url){const d=D(),prev=d.event;
+  d.event={...(prev&&prev.url===url?prev:{}),url,guests:prev?.guests||[]};S.awaitPartiful=false;save();
+  if(window.IJNative&&IJNative.fetchEvent){IJNative.fetchEvent(url);toast("Partiful event linked. Getting the event photo…")}else toast("Partiful event linked");
+  go("event",{err:"",evDraft:null})}
 /* A Partiful link shared into the app from Android's share menu */
 window.ijShared=function(text){
   const m=String(text||"").match(/https?:\/\/(www\.)?partiful\.com\/[^\s"'<>]+/i);
   if(!m){toast("That wasn't a Partiful event link.");return}
   const url=m[0].replace(/^http:/i,"https:");
-  if(S.di!=null&&D()&&["event","deck","album","quick","library","players","edit"].includes(S.screen)){go("event",{err:"",evDraft:url});toast("Got the Partiful link");return}
+  if(S.di!=null&&D()&&["event","deck","album","quick","library","players","edit","tagnew"].includes(S.screen)){linkEvent(url);return}
   S.pendingEvent=url;S.di=null;go("home");toast("Pick the deck this Partiful event is for.");
 };
 
@@ -605,7 +708,7 @@ function album(){
   return `<button class="link" onclick="go('deck')">← ${esc(d.name)}</button>
   <h2>Photo album</h2>
   ${S.uploader?`<div class="asme"><span>Adding photos as <strong>${esc(S.uploader)}</strong></span><button class="link" onclick="S.uploaderAsk=true;render()">Switch</button></div>
-    <button class="btn coral upl">Upload photos<input type="file" id="albumfile" accept="image/*" multiple onchange="uploadPhotos(this.files,()=>go('album'))" aria-label="Upload photos"></button>
+    <button class="btn coral upl">Upload photos<input type="file" id="albumfile" accept="image/*" multiple onchange="uploadPhotos(this.files,ids=>ids.length?go('tagnew',{newIds:ids,tagQ:{}}):go('album'))" aria-label="Upload photos"></button>
     <p class="hint">Photos you add get your name, so “Who took this?” cards fill themselves in. Passing the phone? Tap Switch first.</p>`
    :`<p class="muted">Tell the app who's adding photos. Each photo gets that person's name, so “Who took this?” cards fill themselves in.</p>
     <button class="btn coral" onclick="S.uploaderAsk=true;render()">Who's adding photos?</button>`}
@@ -661,7 +764,7 @@ function quick(){
   <h2>Who took these?</h2>
   <p class="muted">Names are filled in from whoever added each photo, or from the phone that took it. Fix any that are wrong, and leave a photo blank to skip it.</p>
   ${list.length?`<div class="card">${list.map(p=>{const g=guessTaker(p);return `<div class="qrow"><img src="${srcOf(p.src)}" alt="">
-     <label>Taken by<input id="qk_${p.id}" list="crewq" placeholder="Name" autocomplete="off" value="${esc(g.name)}">${g.why?`<small>${esc(g.why)}</small>`:""}</label></div>`}).join("")}${crewList(d,"crewq")}</div>
+     <label>Taken by${personSelect("qk_"+p.id,d,g.name)}${g.why?`<small>${esc(g.why)}</small>`:""}</label></div>`}).join("")}${crewList(d,"crewq")}</div>
      <button class="btn coral block" onclick="makeQuick()">Make the cards</button>`
    :`<p class="muted">Every photo in the album already has a card.</p>`}`;
 }
@@ -671,7 +774,7 @@ function guessTaker(p){
   return {name:"",why:p.model?`Taken on a ${p.model}`:""};
 }
 function makeQuick(){const d=D(),used=new Set(d.questions.map(q=>q.photo));let n=0;
-  d.album.filter(p=>!used.has(p.id)).forEach(p=>{const el=$("qk_"+p.id),v=el&&el.value.trim();
+  d.album.filter(p=>!used.has(p.id)).forEach(p=>{const v=personVal("qk_"+p.id);
     if(v){d.questions.push({q:"Who took this photo?",a:v,wrong:[],story:"",photo:p.id,type:"crew",zoom:false,fx:50,fy:50});n++;if(p.model)MODELS[p.model]=v}});
   store.set("ij_models",MODELS);
   if(!n){toast("Type at least one name first.");return}
@@ -683,27 +786,25 @@ function openLib(pid){const d=D();
 function setCat(c){S.libCat=c;S.libSel=null;S.err="";render()}
 function setMature(v){S.mature=v;store.set("ij_mature",v);if(!v)S.libCat="Classic";S.libSel=null;render()}
 function libPick(id){S.libPhoto=id;S.libPicking=false;render()}
-function libSelect(i){S.libSel=S.libSel===i?null:i;S.err="";render();setTimeout(()=>$("lib_a")&&$("lib_a").focus(),0)}
+function libSelect(i){S.libSel=S.libSel===i?null:i;S.err="";render()}
 function surprise(){const pool=LIB.map((x,i)=>i).filter(i=>LIB[i].cat===(S.libCat||"Classic"));
   let i=pool[Math.floor(Math.random()*pool.length)];if(pool.length>1&&i===S.libSel)i=pool[(pool.indexOf(i)+1)%pool.length];libSelect(i)}
-function libItem(x,d){const sel=S.libSel===x.i;
-  return `<div class="lq ${sel?"sel":""}"><button onclick="libSelect(${x.i})" aria-expanded="${sel}"><span>${esc(x.t)}</span><span class="tagx">${x.crew?"Crew pick":"You write it"}${x.zoom?"<br>Zoom":""}</span></button>
-  ${!sel?"":x.crew?`<div class="ansbox"><label>Who's the answer?<input id="lib_a" list="crewl" placeholder="Their name" autocomplete="off" onkeydown="if(event.key==='Enter')libSave(${x.i})"></label>${crewList(d,"crewl")}
+function libItem(x,d){const sel=S.libSel===x.i,ph=S.libPhoto?d.album.find(p=>p.id===S.libPhoto):null;
+  return `<div class="lq ${sel?"sel":""}"><button onclick="libSelect(${x.i})" aria-expanded="${sel}"><span>${esc(x.t)}</span>${x.zoom?`<span class="tagx">Zoom</span>`:""}</button>
+  ${sel?`<div class="ansbox"><label>Who's the answer?${personSelect("lib_a",d,x.t==="Who took this photo?"&&ph?.by?ph.by:"")}</label>
       <p class="hint">The other choices get filled in with your crew's names.</p>${S.err?`<p class="err">${esc(S.err)}</p>`:""}
-      <button class="btn coral" onclick="libSave(${x.i})">Save card</button></div>`
-    :`<div class="ansbox"><p class="hint">This one needs the right answer and a couple of wrong ones.</p><button class="btn coral" onclick="libCustom(${x.i})">Write the answers</button></div>`}</div>`}
+      <button class="btn coral" onclick="libSave(${x.i})">Save card</button></div>`:""}</div>`}
 function library(){
   const d=D(),cat=S.libCat||"Classic",src=S.libPhoto?photoSrc(d,S.libPhoto):null,locked=cat==="Mature"&&!S.mature;
   const items=LIB.map((x,i)=>({...x,i})).filter(x=>x.cat===cat);
   const used=new Set(d.questions.map(q=>q.photo)),left=d.album.filter(p=>!used.has(p.id)).length;
   return `<button class="link" onclick="go('deck')">← ${esc(d.name)}</button>
   <h2>Question library</h2>
-  <p class="muted">Pick a photo, tap a question, type who it is. After you save, the next photo without a card comes up.</p>
+  <p class="muted">${LIB.length} questions. Pick one, choose who the answer is, and save. The next photo without a card comes up after you save.</p>
   <div class="card">
     ${S.libPicking||!src?`<span class="eyebrow">Choose a photo${d.album.length?` · ${left} without a card`:""}</span>
       <div class="pickgrid"><button class="pick ${!S.libPhoto?"on":""}" onclick="libPick(null)">None</button>
-      ${d.album.map(p=>`<button class="pick ${S.libPhoto===p.id?"on":""}" onclick="libPick('${p.id}')" aria-label="Use this photo"><img src="${srcOf(p.src)}" alt=""></button>`).join("")}
-      <label class="pick upl">+ New<input type="file" accept="image/*" onchange="uploadPhotos(this.files,ids=>{if(ids[0])S.libPhoto=ids[0];S.libPicking=false;render()})" aria-label="Upload a new photo"></label></div>`
+      ${d.album.map(p=>`<button class="pick ${S.libPhoto===p.id?"on":""}" onclick="libPick('${p.id}')" aria-label="Use this photo"><img src="${srcOf(p.src)}" alt=""></button>`).join("")}</div>`
      :`<img class="libphoto" src="${src}" alt="The photo for this card"><div class="row between"><span class="hint">${left} photo${left==1?"":"s"} still without a card</span><button class="link" onclick="S.libPicking=true;render()">Change photo</button></div>`}
   </div>
   <div class="cats">${LIB_CATS.map(c=>`<button class="${c===cat?"on":""} ${c==="Mature"?"m":""}" onclick="setCat('${c}')">${c==="Mature"?"Mature 18+":c}</button>`).join("")}</div>
@@ -713,15 +814,34 @@ function library(){
      <button class="btn ghost block" onclick="surprise()">Surprise me</button>
      ${cat==="Mature"?`<button class="link" onclick="setMature(false)">Hide mature questions</button>`:""}`}`;
 }
-function libSave(i){const it=LIB[i],v=($("lib_a")?.value||"").trim();
-  if(!v){S.err="Type who the answer is.";render();setTimeout(()=>$("lib_a")&&$("lib_a").focus(),0);return}
+function libSave(i){const it=LIB[i],v=personVal("lib_a");
+  if(!v){S.err="Pick who the answer is.";render();return}
   const d=D(),ph=S.libPhoto||null;
   d.questions.push({q:it.t,a:v,wrong:[],story:"",photo:ph,type:"crew",zoom:!!(it.zoom&&ph),fx:50,fy:50,mature:it.cat==="Mature"});
   save();
   const used=new Set(d.questions.map(q=>q.photo)),nxt=d.album.find(p=>!used.has(p.id));
   toast(it.zoom&&ph?"Card saved. Edit it to move the zoom spot.":nxt?"Card saved. Next photo up.":"Card saved");
   S.libSel=null;S.err="";if(nxt)S.libPhoto=nxt.id;render();window.scrollTo(0,0)}
-function libCustom(i){const it=LIB[i];startEdit(-1,{photo:S.libPhoto||null,q:it.t,type:"custom",zoom:!!(it.zoom&&S.libPhoto),mature:it.cat==="Mature"})}
+/* right after uploading: the person who added the photos answers for them */
+function tagnew(){
+  const d=D(),list=(S.newIds||[]).map(id=>d.album.find(p=>p.id===id)).filter(Boolean);
+  const pool=LIB.map((x,i)=>({...x,i})).filter(x=>x.cat!=="Mature"||S.mature);
+  S.tagQ=S.tagQ||{};list.forEach(p=>{if(S.tagQ[p.id]==null)S.tagQ[p.id]=pool[Math.floor(Math.random()*pool.length)].i});
+  const opts=sel=>LIB_CATS.filter(c=>c!=="Mature"||S.mature).map(c=>`<optgroup label="${c==="Mature"?"Mature 18+":c}">${pool.filter(x=>x.cat===c).map(x=>`<option value="${x.i}" ${sel===x.i?"selected":""}>${esc(x.t)}</option>`).join("")}</optgroup>`).join("");
+  return `<h2>Make cards from your photos</h2>
+  <p class="muted">${esc(S.uploader||"You")}, you added these, so you know the answers. Each photo has a question picked for it. Choose who the answer is, or tap “Another question”. Leave the answer empty to skip a photo.</p>
+  ${list.map(p=>`<div class="card"><img class="libphoto" src="${srcOf(p.src)}" alt="">
+    <label>Question<select id="tq_${p.id}">${opts(S.tagQ[p.id])}</select></label>
+    <button class="link" style="align-self:flex-start" onclick="reroll('${p.id}')">Another question</button>
+    <label>Who's the answer?${personSelect("ta_"+p.id,d,"")}</label></div>`).join("")||`<p class="muted">Those photos are already in the album.</p>`}
+  <button class="btn coral block" onclick="saveTagged()">Save cards</button>
+  <button class="link" style="align-self:center" onclick="S.tagQ={};go('album')">Skip for now</button>`;
+}
+function reroll(id){const sel=$("tq_"+id);if(!sel)return;const n=sel.options.length;let k=Math.floor(Math.random()*n);if(n>1&&k===sel.selectedIndex)k=(k+1)%n;sel.selectedIndex=k;S.tagQ[id]=+sel.value}
+function saveTagged(){const d=D();let n=0;
+  (S.newIds||[]).forEach(id=>{const sel=$("tq_"+id);if(!sel)return;const it=LIB[+sel.value],a=personVal("ta_"+id);if(!a||!it)return;
+    d.questions.push({q:it.t,a,wrong:[],story:"",photo:id,type:"crew",zoom:it.zoom,fx:50,fy:50,mature:it.cat==="Mature"});n++});
+  save();S.tagQ={};toast(n?`Saved ${n} card${n>1?"s":""}`:"No cards saved. Pick who the answer is first.");if(n)go("deck")}
 function rmPhoto(id){const d=D();d.album=d.album.filter(p=>p.id!==id);d.questions.forEach(q=>{if(q.photo===id)q.photo=null});save();toast("Photo removed");closeSheets()}
 
 /* question editor */
@@ -729,7 +849,7 @@ function startEdit(i,preset={}){const q=i>=0?D().questions[i]:{q:"",a:"",wrong:[
   go("edit",{qi:i,err:"",draft:{q:q.q,a:q.a,wrong:[...q.wrong,"","",""].slice(0,3),story:q.story||"",photo:q.photo||null,
     type:q.type||"custom",zoom:!!q.zoom,fx:q.fx??50,fy:q.fy??50,mature:!!q.mature,...preset}})}
 function readDraft(){if(!$("fq"))return;
-  S.draft={...S.draft,q:$("fq").value,a:$("fa").value,story:$("fs").value};
+  S.draft={...S.draft,q:$("fq").value,a:personVal("fa"),story:$("fs").value};
   if($("fw0"))S.draft.wrong=[0,1,2].map(i=>$("fw"+i).value);
   if($("fz"))S.draft.zoom=$("fz").checked}
 function usePrompt(i){readDraft();const p=PROMPTS[i];S.draft.q=p.t;S.draft.type=p.crew?"crew":"custom";if(p.zoom)S.draft.zoom=true;render()}
@@ -758,7 +878,7 @@ function edit(){
     <label>Question<textarea id="fq" placeholder="${ps?"Who took this photo?":"Who fell asleep on the trajinera in Xochimilco?"}">${esc(f.q)}</textarea></label>
     <span class="eyebrow">The answer is…</span>
     <div class="seg" role="group" aria-label="Answer type"><button class="${crew?"on":""}" onclick="setType('crew')">Someone in the crew</button><button class="${crew?"":"on"}" onclick="setType('custom')">Something else</button></div>
-    ${crew?`<label>Who?<input id="fa" value="${esc(f.a)}" list="crewe" placeholder="Their name" autocomplete="off"></label>${crewList(d,"crewe")}
+    ${crew?`<label>Who?${personSelect("fa",d,f.a)}</label>
       <p class="hint">The other choices are filled in with names of the people playing${gl?" and your Partiful guests":""}, shuffled every game.</p>`
      :`<label>Right answer<input id="fa" value="${esc(f.a)}" placeholder="${ps?"Arguing about which taco stand was better":"Chris, obviously"}"></label>
       <label>Wrong answers<input id="fw0" value="${esc(f.wrong[0])}" placeholder="Wrong answer 1">
@@ -787,9 +907,9 @@ function eventScreen(){
   return `<button class="link" onclick="go('deck')">← ${esc(D().name)}</button>
   <h2>Partiful event</h2>
   ${STORE_BUILD?`<div class="card partiful"><span class="eyebrow">Fastest way</span>
-    <ol class="steps"><li>Tap the button to open Partiful.</li><li>Open the event and tap <strong>Share</strong>.</li><li>Choose <strong>Inside Jokes</strong>. You'll come right back here with the link filled in.</li></ol>
-    <a class="btn coral" href="https://partiful.com/" target="_blank" rel="noopener">Pick from Partiful</a>
-    <p class="hint">No Partiful app? It opens partiful.com instead. Copy the event link there and paste it below.</p></div>`
+    <ol class="steps"><li>Tap the button. Partiful opens to your events.</li><li>Open the event and tap <strong>Share</strong>.</li><li>Choose <strong>Inside Jokes</strong>, or tap <strong>Copy link</strong> and come back here. The link fills in by itself.</li></ol>
+    <button class="btn coral" onclick="pickPartiful()">Pick from Partiful</button>
+    <p class="hint">The event's cover photo becomes your home screen background.</p></div>`
    :`<p class="muted">Paste the event's link from Partiful. You can open the event, tap Share, and copy the link.</p>`}
   <div class="card partiful">
     <label>Event link<input id="eurl" value="${esc(S.evDraft??e.url)}" placeholder="https://partiful.com/e/…" inputmode="url"></label>
@@ -807,7 +927,10 @@ function saveEvent(){
   if(url&&!/^https:\/\/(www\.)?partiful\.com\//i.test(url.replace(/^http:/i,"https:"))){S.err="That doesn't look like a Partiful link. It should start with partiful.com/e/";render();return}
   const guests=[...new Set(raw.split(/[\n,]+/).map(s=>s.replace(/[•·]/g,"").trim()).filter(s=>s&&s.length<=30&&!NOISE.test(s)))];
   if(!url&&!guests.length){S.err="Add the event link, the guest list, or both.";render();return}
-  D().event={url:url.replace(/^http:/i,"https:"),guests};S.evDraft=null;save();toast("Event linked");go("deck");
+  url=url.replace(/^http:/i,"https:");const prev=D().event;
+  D().event={...(prev&&prev.url===url?prev:{}),url,guests};S.evDraft=null;S.awaitPartiful=false;save();
+  if(url&&window.IJNative&&IJNative.fetchEvent){IJNative.fetchEvent(url);toast("Event linked. Getting the event photo…")}else toast("Event linked");
+  go("deck");
 }
 function inviteText(i){const d=decks[i];return `🎉 Game night: think you remember ${d.name}?\n\nI made an Inside Jokes trivia deck about it. Open Inside Jokes, tap “Import a friend's deck”, and paste this code:\n\n${exportDeck(i)}`}
 
@@ -825,7 +948,8 @@ function setup(){
   </div>
   ${guests.length?`<span class="eyebrow" style="color:var(--violet)">From the Partiful guest list · tap to add</span>
     <div class="chips">${guests.map(g=>`<button class="chip add" onclick="quickAdd(${d.event.guests.indexOf(g)})">+ ${esc(g)}</button>`).join("")}</div>`:""}
-  <div class="chips">${players.map((p,i)=>`<span class="chip"><span>${esc(p.name)} ${starsOf(p.name)}${p.nick?`<small>${esc(p.nick)}</small>`:""}${S.k.cash&&p.venmo?`<small>Venmo @${esc(p.venmo)}</small>`:""}</span><button aria-label="Remove ${esc(p.name)}" onclick="rmP(${i})">×</button></span>`).join("")}</div>
+  <div class="chips">${players.map((p,i)=>`<span class="chip"><span>${esc(p.name)} ${starsOf(p.name)}${p.nick?`<small>${esc(p.nick)}</small>`:""}${S.k.cash&&p.venmo?`<small>Venmo @${esc(p.venmo)}</small>`:""}</span><button class="hostb ${hostName()===p.name?"on":""}" onclick="setHost(${i})" aria-label="Make ${esc(p.name)} the host">${hostName()===p.name?"Host":"Make host"}</button><button aria-label="Remove ${esc(p.name)}" onclick="rmP(${i})">×</button></span>`).join("")}</div>
+  ${players.length?`<p class="hint">The host holds the phone, draws every card and reads it out. Tap “Make host” to change who.</p>`:""}
   ${stakesUI()}
   ${S.err?`<p class="err">${esc(S.err)}</p>`:""}
   <button class="btn coral block" onclick="start()">Shuffle and deal · ${d.questions.length} cards</button>`;
@@ -843,6 +967,8 @@ function stakesUI(){const k=S.k;
   <div class="stake ${k.secret?"on":""}"><label class="toggle"><input type="checkbox" ${k.secret?"checked":""} onchange="setStake('secret',this.checked)">
     <span class="title">Winner's secret question<br><span class="hint">The winner asks the group one question. Everyone answers privately, and the answers are revealed with no names.</span></span></label></div>
   </div><p class="hint">Every win adds a ★ to the winner's name. Bronze at 1, Silver at 3, Gold at 6, Legend at 10.</p>`}
+function hostName(){const h=S.host&&players.find(p=>p.name===S.host);return h?h.name:(players[0]?.name||"")}
+function setHost(i){S.host=players[i].name;store.set("ij_host",S.host);render()}
 function setStake(key,v){S.k[key]=v;saveK();render()}
 function hidePhoto(f){if(!f)return;shrink(f).then(src=>{if(!src){toast("Couldn't read that photo. Try a JPG or PNG.");return}S.k.photoSrc=src;toast("Secret photo locked in");render()})}
 function addP(){const n=$("pname").value.trim(),k=$("pnick").value.trim(),v=($("pvenmo")?.value||"").trim().replace(/^@/,"").replace(/[^A-Za-z0-9_-]/g,"");
@@ -873,8 +999,9 @@ function turn(){
   return `<div class="panel turn pop"><span class="eyebrow">Card ${S.g.i+1} of ${S.g.qs.length}</span>
     <div class="who">${esc(p.name)}</div>${p.wins?`<p>${starsOf(p.name)} <span class="tier">${tierOf(p.wins)}</span></p>`:""}${p.nick?`<p class="nick">“${esc(p.nick)}”</p>`:""}
     <div class="pile">${left>2?'<div class="cback"><b>IJ</b></div>':"<div></div>"}${left>1?'<div class="cback"><b>IJ</b></div>':"<div></div>"}<div class="cback" id="top"><b>IJ</b></div></div>
-    <p class="muted">Your turn. Everyone else, eyes off the screen.</p>
-    <button class="btn coral" onclick="draw()">Draw a card</button></div>`;
+    ${hostName()===p.name?`<p class="muted">You're the host and it's your turn, so draw your own card.</p>`
+      :`<p class="muted"><strong>${esc(hostName())}</strong> draws the card and reads it out. ${esc(p.name)} answers out loud, and ${esc(hostName())} taps the answer.</p>`}
+    <button class="btn coral" onclick="draw()">${esc(hostName())}, draw a card</button></div>`;
 }
 function draw(){const t=$("top");S.g.dealt=false;if(reduce||!t){go("play");return}t.classList.add("draw");setTimeout(()=>go("play"),480)}
 function play(){
